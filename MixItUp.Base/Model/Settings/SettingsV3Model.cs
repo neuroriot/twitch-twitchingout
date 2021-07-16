@@ -217,6 +217,8 @@ namespace MixItUp.Base.Model.Settings
         [DataMember]
         public string AlertBitsCheeredColor { get; set; }
         [DataMember]
+        public string AlertHypeTrainColor { get; set; }
+        [DataMember]
         public string AlertDonationColor { get; set; }
         [DataMember]
         public string AlertChannelPointsColor { get; set; }
@@ -888,7 +890,7 @@ namespace MixItUp.Base.Model.Settings
 
         public void SetUserData(UserDataModel userData)
         {
-            if (userData != null)
+            if (userData != null && userData.Platform != StreamingPlatformTypeEnum.None)
             {
                 lock (this.UserData)
                 {
