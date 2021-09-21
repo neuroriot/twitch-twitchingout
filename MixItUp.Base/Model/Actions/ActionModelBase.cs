@@ -46,8 +46,9 @@ namespace MixItUp.Base.Model.Actions
         IFTTT,
         Twitch,
         PixelChat,
-        [Obsolete]
         VTubeStudio,
+        [Obsolete]
+        Voicemod,
     }
 
     [DataContract]
