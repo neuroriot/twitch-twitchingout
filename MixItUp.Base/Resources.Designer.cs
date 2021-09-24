@@ -628,7 +628,7 @@ namespace MixItUp.Base {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Amount (+/-).
+        ///   Looks up a localized string similar to Amount.
         /// </summary>
         public static string AmountPlusMinus {
             get {
@@ -3918,6 +3918,15 @@ namespace MixItUp.Base {
         public static string EditProducts {
             get {
                 return ResourceManager.GetString("EditProducts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This dialog can be used to edit the test values for the special identifiers..
+        /// </summary>
+        public static string EditTestSpecialIdentifierText {
+            get {
+                return ResourceManager.GetString("EditTestSpecialIdentifierText", resourceCulture);
             }
         }
         
@@ -16776,7 +16785,7 @@ namespace MixItUp.Base {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Voicemod connectivity allows you to control functionality in the Voicemod software, such as enabling/disabling voice changing and changing the voice you&apos;re using..
+        ///   Looks up a localized string similar to Voicemod connectivity allows you to control functionality in the Voicemod software, such as enabling/disabling voice changing and changing the voice you&apos;re using. Some functionality or features in Voicemod require a paid subscription. For more information, please visit the Voicemod website:.
         /// </summary>
         public static string VoicemodInfo {
             get {
@@ -16790,6 +16799,15 @@ namespace MixItUp.Base {
         public static string VoicemodNotConnected {
             get {
                 return ResourceManager.GetString("VoicemodNotConnected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Voicemod Website.
+        /// </summary>
+        public static string VoicemodWebsite {
+            get {
+                return ResourceManager.GetString("VoicemodWebsite", resourceCulture);
             }
         }
         
