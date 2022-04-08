@@ -44,6 +44,10 @@ namespace MixItUp.Base.Model.Store
         IFTTT,
         Twitch,
         PixelChat,
+        VTubeStudio,
+        Voicemod,
+        YouTube,
+        Trovo,
 
         // Command Tags
         ChatCommand = 1000,
@@ -54,6 +58,7 @@ namespace MixItUp.Base.Model.Store
         TwitchChannelPointsCommand,
         GameCommand,
         Webhook,
+        TrovoSpell,
 
         // Extra Tags
         [Obsolete]

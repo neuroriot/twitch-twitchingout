@@ -36,6 +36,39 @@
             <TextBox Text="{Binding Username}" MaterialDesign:HintAssist.Hint="{x:Static resx:Resources.Username}" Style="{StaticResource MaterialDesignFloatingHintTextBox}" />
         </Grid>
 
+        <Grid Grid.Row="2" Visibility="{Binding ShowTextGrid, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <TextBox Text="{Binding Text}" MaterialDesign:HintAssist.Hint="{x:Static resx:Resources.Name}" Style="{StaticResource MaterialDesignFloatingHintTextBox}" />
+        </Grid>
+
+        <Grid Grid.Row="2" Visibility="{Binding ShowSetCustomTagsGrid, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="10" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="10" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Style="{StaticResource DefaultBorder}">
+                <ItemsControl ItemsSource="{Binding CustomTags}" Margin="10">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <MaterialDesign:Chip Content="{Binding Name}" IsDeletable="{Binding IsDeletable}" DeleteCommand="{Binding DeleteTagCommand}" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </Border>
+
+            <ComboBox Grid.Column="2" ItemsSource="{Binding Tags}" SelectedItem="{Binding SelectedTag}" DisplayMemberPath="Name" IsEditable="True" MaterialDesign:HintAssist.Hint="{x:Static resx:Resources.Tag}" Style="{StaticResource MaterialDesignFloatingHintComboBox}" Width="150" />
+
+            <Button Grid.Column="4" Command="{Binding AddTagCommand}" IsEnabled="{Binding CanAddMoreTags}" Content="{MaterialDesign:PackIcon Add}" Padding="10,0" />
+        </Grid>
+
         <Grid Grid.Row="2" Visibility="{Binding ShowAdGrid, Converter={StaticResource BooleanToVisibilityConverter}}">
             <ComboBox ItemsSource="{Binding AdLengths}" SelectedItem="{Binding SelectedAdLength}" MaterialDesign:HintAssist.Hint="{x:Static resx:Resources.AmountSeconds}" Style="{StaticResource MaterialDesignFloatingHintComboBox}" />
         </Grid>
@@ -45,11 +78,11 @@
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="5" />
                 <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="100" />
+                <ColumnDefinition Width="50" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="5" />
                 <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="100" />
+                <ColumnDefinition Width="50" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="5" />
                 <ColumnDefinition Width="Auto" />
@@ -62,7 +95,7 @@
             <ToggleButton Grid.Column="6" VerticalAlignment="Center" IsChecked="{Binding ShowInfoInChat}" />
 
             <TextBlock Grid.Column="8" VerticalAlignment="Center" Text="{Binding Source={x:Static resx:Resources.Result}, StringFormat={x:Static resx:Resources.ColumnHeaderFormat}}" />
-            <TextBlock Grid.Column="10" VerticalAlignment="Center" Text="$clipurl" />
+            <TextBox Grid.Column="10" VerticalAlignment="Center" Text="$clipurl" Style="{StaticResource TextBoxReadOnlySelectable}" />
         </Grid>
 
         <Grid Grid.Row="2" Visibility="{Binding ShowStreamMarkerGrid, Converter={StaticResource BooleanToVisibilityConverter}}" HorizontalAlignment="Center">
@@ -218,6 +251,14 @@
 
                 <TextBox Grid.Column="2" Text="{Binding PredictionOutcome2}" MaterialDesign:HintAssist.Hint="{x:Static resx:Resources.Outcome2}" Style="{StaticResource MaterialDesignFloatingHintTextBox}" />
             </Grid>
+        </Grid>
+
+        <Grid Grid.Row="2" Visibility="{Binding ShowFollowersGrid, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <TextBox Text="{Binding TimeLength}" MaterialDesign:HintAssist.Hint="{x:Static resx:Resources.Minutes}" Style="{StaticResource MaterialDesignFloatingHintTextBox}" />
+        </Grid>
+
+        <Grid Grid.Row="2" Visibility="{Binding ShowSlowChatGrid, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <TextBox Text="{Binding TimeLength}" MaterialDesign:HintAssist.Hint="{x:Static resx:Resources.Seconds}" Style="{StaticResource MaterialDesignFloatingHintTextBox}" />
         </Grid>
 
         <ActionControls:SubActionContainerControl Grid.Row="3" Visibility="{Binding ShowSubActions, Converter={StaticResource BooleanToVisibilityConverter}}" Margin="0,20,0,0" />

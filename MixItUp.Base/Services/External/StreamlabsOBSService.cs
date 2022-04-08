@@ -158,7 +158,7 @@ namespace MixItUp.Base.Services.External
         private int currentID = 1;
         private SemaphoreSlim idSempahoreLock = new SemaphoreSlim(1);
 
-        public string Name { get { return "Streamlabs OBS"; } }
+        public string Name { get { return MixItUp.Base.Resources.StreamlabsDesktop; } }
 
         public bool IsEnabled { get { return ChannelSession.Settings.EnableStreamlabsOBSConnection; } }
 
@@ -175,9 +175,9 @@ namespace MixItUp.Base.Services.External
                     await this.StartReplayBuffer();
 
                     this.Connected(this, new EventArgs());
-                    ChannelSession.ReconnectionOccurred("Streamlabs OBS");
+                    ChannelSession.ReconnectionOccurred(MixItUp.Base.Resources.StreamlabsDesktop);
                     this.IsConnected = true;
-                    ChannelSession.Services.Telemetry.TrackService("Streamlabs OBS");
+                    ServiceManager.Get<ITelemetryService>().TrackService("Streamlabs OBS");
                     return new Result();
                 }
             }
@@ -196,9 +196,9 @@ namespace MixItUp.Base.Services.External
             this.IsConnected = false;
 
             this.Disconnected(this, new EventArgs());
-            ChannelSession.DisconnectionOccurred("Streamlabs OBS");
+            ChannelSession.DisconnectionOccurred(MixItUp.Base.Resources.StreamlabsDesktop);
 
-            return Task.FromResult(0);
+            return Task.CompletedTask;
         }
 
         public async Task<bool> TestConnection() { return (await this.GetActiveScene() != null); }
@@ -234,7 +234,7 @@ namespace MixItUp.Base.Services.External
             }
         }
 
-        public Task SetSourceFilterVisibility(string sourceName, string filterName, bool visibility) { return Task.FromResult(0); }
+        public Task SetSourceFilterVisibility(string sourceName, string filterName, bool visibility) { return Task.CompletedTask; }
 
         public async Task SetWebBrowserSourceURL(string sceneName, string sourceName, string url)
         {
@@ -324,7 +324,7 @@ namespace MixItUp.Base.Services.External
             return true;
         }
 
-        public Task SetSceneCollection(string sceneCollectionName) { return Task.FromResult(0); }
+        public Task SetSceneCollection(string sceneCollectionName) { return Task.CompletedTask; }
 
         private async Task<StreamlabsOBSScene> GetActiveScene()
         {

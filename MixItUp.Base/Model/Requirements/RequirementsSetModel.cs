@@ -14,57 +14,9 @@ namespace MixItUp.Base.Model.Requirements
         [DataMember]
         public List<RequirementModelBase> Requirements { get; set; } = new List<RequirementModelBase>();
 
-        public RequirementsSetModel() { }
-
         public RequirementsSetModel(IEnumerable<RequirementModelBase> requirements) { this.Requirements.AddRange(requirements); }
 
-#pragma warning disable CS0612 // Type or member is obsolete
-        internal RequirementsSetModel(MixItUp.Base.ViewModel.Requirement.RequirementViewModel requirements)
-        {
-            if (requirements.Role != null)
-            {
-                this.Requirements.Add(new RoleRequirementModel(requirements.Role));
-            }
-
-            if (requirements.Cooldown != null)
-            {
-                this.Requirements.Add(new CooldownRequirementModel(requirements.Cooldown));
-            }
-
-            if (requirements.Currency != null)
-            {
-                if (requirements.Currency.RequirementType != ViewModel.Requirement.CurrencyRequirementTypeEnum.NoCurrencyCost)
-                {
-                    this.Requirements.Add(new CurrencyRequirementModel(requirements.Currency));
-                }
-            }
-
-            if (requirements.Rank != null)
-            {
-                this.Requirements.Add(new RankRequirementModel(requirements.Rank));
-            }
-
-            if (requirements.Inventory != null)
-            {
-                this.Requirements.Add(new InventoryRequirementModel(requirements.Inventory));
-            }
-
-            if (requirements.Threshold != null)
-            {
-                this.Requirements.Add(new ThresholdRequirementModel(requirements.Threshold));
-            }
-
-            if (requirements.Settings != null)
-            {
-                this.Requirements.Add(new SettingsRequirementModel(requirements.Settings));
-                RoleRequirementModel role = this.Role;
-                if (role != null)
-                {
-                    role.PatreonBenefitID = requirements.Settings.PatreonBenefitIDRequirement;
-                }
-            }
-        }
-#pragma warning restore CS0612 // Type or member is obsolete
+        public RequirementsSetModel() { }
 
         public RoleRequirementModel Role { get { return (RoleRequirementModel)this.Requirements.FirstOrDefault(r => r is RoleRequirementModel); } }
 

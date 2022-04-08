@@ -1,9 +1,25 @@
-﻿using StreamingClient.Base.Model.OAuth;
+﻿using MixItUp.Base.Services;
+using MixItUp.Base.Services.Glimesh;
+using MixItUp.Base.Services.Trovo;
+using MixItUp.Base.Services.Twitch;
+using MixItUp.Base.Services.YouTube;
+using Newtonsoft.Json;
+using StreamingClient.Base.Model.OAuth;
 using System;
 using System.Runtime.Serialization;
 
 namespace MixItUp.Base.Model.Settings
 {
+    public static class OAuthTokenModelExtensions
+    {
+        public static void ResetToken(this OAuthTokenModel token)
+        {
+            token.accessToken = string.Empty;
+            token.refreshToken = string.Empty;
+            token.expiresIn = 0;
+        }
+    }
+
     [DataContract]
     public class StreamingPlatformAuthenticationSettingsModel : IEquatable<StreamingPlatformAuthenticationSettingsModel>
     {
@@ -23,12 +39,27 @@ namespace MixItUp.Base.Model.Settings
         [DataMember]
         public string ChannelID { get; set; }
 
-        [DataMember]
-        public bool IsEnabled { get; set; }
+        public StreamingPlatformAuthenticationSettingsModel(StreamingPlatformTypeEnum type) { this.Type = type; }
 
+        [Obsolete]
         public StreamingPlatformAuthenticationSettingsModel() { }
 
-        public StreamingPlatformAuthenticationSettingsModel(StreamingPlatformTypeEnum type) { this.Type = type; }
+        [JsonIgnore]
+        public bool IsEnabled { get { return this.UserOAuthToken != null; } }
+
+        public void ClearUserData()
+        {
+            this.UserID = null;
+            this.UserOAuthToken = null;
+            this.ChannelID = null;
+            this.ClearBotData();
+        }
+
+        public void ClearBotData()
+        {
+            this.BotID = null;
+            this.BotOAuthToken = null;
+        }
 
         public override bool Equals(object obj)
         {
@@ -39,7 +70,7 @@ namespace MixItUp.Base.Model.Settings
             return false;
         }
 
-        public bool Equals(StreamingPlatformAuthenticationSettingsModel other) { return this.Type == other.Type; }
+        public bool Equals(StreamingPlatformAuthenticationSettingsModel other) { return this.Type == other.Type && this.UserID == other.UserID; }
 
         public override int GetHashCode() { return this.Type.GetHashCode(); }
     }

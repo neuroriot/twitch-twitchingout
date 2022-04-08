@@ -1,4 +1,6 @@
-﻿using MixItUp.Base.Util;
+﻿using MixItUp.Base.Services;
+using MixItUp.Base.Services.External;
+using MixItUp.Base.Util;
 using StreamingClient.Base.Model.OAuth;
 using System.Windows.Input;
 
@@ -20,6 +22,8 @@ namespace MixItUp.Base.ViewModel.Services
         public ICommand LogInCommand { get; set; }
         public ICommand LogOutCommand { get; set; }
 
+        public override string WikiPageName { get { return "ifttt"; } }
+
         public IFTTTServiceControlViewModel()
             : base(Resources.IFTTT)
         {
@@ -31,7 +35,7 @@ namespace MixItUp.Base.ViewModel.Services
                 }
                 else
                 {
-                    Result result = await ChannelSession.Services.IFTTT.Connect(new OAuthTokenModel() { accessToken = this.IFTTTWebHookKey });
+                    Result result = await ServiceManager.Get<IFTTTService>().Connect(new OAuthTokenModel() { accessToken = this.IFTTTWebHookKey });
                     if (result.Success)
                     {
                         this.IsConnected = true;
@@ -45,14 +49,14 @@ namespace MixItUp.Base.ViewModel.Services
 
             this.LogOutCommand = this.CreateCommand(async () =>
             {
-                await ChannelSession.Services.IFTTT.Disconnect();
+                await ServiceManager.Get<IFTTTService>().Disconnect();
 
                 ChannelSession.Settings.IFTTTOAuthToken = null;
 
                 this.IsConnected = false;
             });
 
-            this.IsConnected = ChannelSession.Services.IFTTT.IsConnected;
+            this.IsConnected = ServiceManager.Get<IFTTTService>().IsConnected;
         }
     }
 }

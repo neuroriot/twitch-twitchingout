@@ -1,5 +1,6 @@
 ﻿using MixItUp.Base.Model.Actions;
 using MixItUp.Base.Model.Requirements;
+using MixItUp.Base.Services;
 using MixItUp.Base.Util;
 using Newtonsoft.Json;
 using StreamingClient.Base.Util;
@@ -24,6 +25,7 @@ namespace MixItUp.Base.Model.Commands
         PreMade = 8,
         StreamlootsCard = 9,
         Webhook = 10,
+        TrovoSpell = 11,
 
         // Specialty Command Types
         UserOnlyChat = 1000,
@@ -44,14 +46,6 @@ namespace MixItUp.Base.Model.Commands
         public CommandGroupSettingsModel() { }
 
         public CommandGroupSettingsModel(string name) { this.Name = name; }
-
-#pragma warning disable CS0612 // Type or member is obsolete
-        internal CommandGroupSettingsModel(MixItUp.Base.Commands.CommandGroupSettings oldGroupSettings)
-        {
-            this.Name = oldGroupSettings.Name;
-            this.TimerInterval = oldGroupSettings.TimerInterval;
-        }
-#pragma warning restore CS0612 // Type or member is obsolete
     }
 
     [DataContract]
@@ -112,35 +106,8 @@ namespace MixItUp.Base.Model.Commands
             this.Type = type;
         }
 
-#pragma warning disable CS0612 // Type or member is obsolete
-        protected CommandModelBase(MixItUp.Base.Commands.CommandBase command)
-        {
-            if (command != null)
-            {
-                this.ID = command.ID;
-                this.GroupName = command.GroupName;
-                this.IsEnabled = command.IsEnabled;
-                this.Unlocked = command.Unlocked;
-
-                if (command is MixItUp.Base.Commands.PermissionsCommandBase)
-                {
-                    MixItUp.Base.Commands.PermissionsCommandBase pCommand = (MixItUp.Base.Commands.PermissionsCommandBase)command;
-                    this.Requirements = new RequirementsSetModel(pCommand.Requirements);
-                }
-
-                foreach (MixItUp.Base.Actions.ActionBase action in command.Actions)
-                {
-                    this.Actions.AddRange(ActionModelBase.UpgradeAction(action));
-                }
-            }
-            else
-            {
-                this.ID = Guid.NewGuid();
-            }
-        }
-#pragma warning restore CS0612 // Type or member is obsolete
-
-        protected CommandModelBase() { }
+        [Obsolete]
+        public CommandModelBase() { }
 
         public string TriggersString { get { return string.Join(" ", this.Triggers); } }
 
@@ -156,7 +123,7 @@ namespace MixItUp.Base.Model.Commands
 
         public virtual Dictionary<string, string> GetTestSpecialIdentifiers() { return CommandModelBase.GetGeneralTestSpecialIdentifiers(); }
 
-        public virtual void TrackTelemetry() { ChannelSession.Services.Telemetry.TrackCommand(this.Type); }
+        public virtual void TrackTelemetry() { ServiceManager.Get<ITelemetryService>().TrackCommand(this.Type); }
 
         public virtual HashSet<ActionTypeEnum> GetActionTypesInCommand(HashSet<Guid> commandIDs = null)
         {
@@ -199,12 +166,7 @@ namespace MixItUp.Base.Model.Commands
                 {
                     actionTypes.Add(ActionTypeEnum.Sound);
                 }
-                else if (action.Type == ActionTypeEnum.OvrStream)
-                {
-                    actionTypes.Add(ActionTypeEnum.Sound);
-                    actionTypes.Add(ActionTypeEnum.Overlay);
-                }
-                else if (action.Type == ActionTypeEnum.StreamingSoftware)
+                else if (action.Type == ActionTypeEnum.Overlay || action.Type == ActionTypeEnum.PolyPop || action.Type == ActionTypeEnum.StreamingSoftware)
                 {
                     actionTypes.Add(ActionTypeEnum.Sound);
                     actionTypes.Add(ActionTypeEnum.Overlay);
@@ -237,11 +199,11 @@ namespace MixItUp.Base.Model.Commands
 
         public IEnumerable<CommandParametersModel> GetPerformingUsers(CommandParametersModel parameters) { return this.Requirements.GetPerformingUsers(parameters); }
 
-        public virtual Task PreRun(CommandParametersModel parameters) { return Task.FromResult(0); }
+        public virtual Task PreRun(CommandParametersModel parameters) { return Task.CompletedTask; }
 
-        public virtual Task CustomRun(CommandParametersModel parameters) { return Task.FromResult(0); }
+        public virtual Task CustomRun(CommandParametersModel parameters) { return Task.CompletedTask; }
 
-        public virtual Task PostRun(CommandParametersModel parameters) { return Task.FromResult(0); }
+        public virtual Task PostRun(CommandParametersModel parameters) { return Task.CompletedTask; }
 
         public override string ToString() { return string.Format("{0} - {1}", this.ID, this.Name); }
 

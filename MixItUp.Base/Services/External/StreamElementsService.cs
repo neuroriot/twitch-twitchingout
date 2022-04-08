@@ -142,12 +142,7 @@ namespace MixItUp.Base.Services.External
         public JToken data { get; set; }
     }
 
-    public interface IStreamElementsService : IOAuthExternalService
-    {
-        Task<StreamElementsChannel> GetCurrentChannel();
-    }
-
-    public class StreamElementsService : OAuthExternalServiceBase, IStreamElementsService
+    public class StreamElementsService : OAuthExternalServiceBase
     {
         public const string TotalSpentSpecialIdentifier = "totalspent";
 
@@ -172,7 +167,7 @@ namespace MixItUp.Base.Services.External
             this.socket = socket;
         }
 
-        public override string Name { get { return "StreamElements"; } }
+        public override string Name { get { return MixItUp.Base.Resources.StreamElements; } }
 
         public override async Task<Result> Connect()
         {
@@ -181,7 +176,7 @@ namespace MixItUp.Base.Services.External
                 string authorizationCode = await this.ConnectViaOAuthRedirect(string.Format(StreamElementsService.AuthorizationUrl, StreamElementsService.ClientID, Guid.NewGuid().ToString()));
                 if (!string.IsNullOrEmpty(authorizationCode))
                 {
-                    string clientSecret = ChannelSession.Services.Secrets.GetSecret("StreamElementsSecret");
+                    string clientSecret = ServiceManager.Get<SecretsService>().GetSecret("StreamElementsSecret");
 
                     List<KeyValuePair<string, string>> bodyContent = new List<KeyValuePair<string, string>>();
                     bodyContent.Add(new KeyValuePair<string, string>("grant_type", "authorization_code"));
@@ -227,7 +222,7 @@ namespace MixItUp.Base.Services.External
         {
             if (this.token != null)
             {
-                string clientSecret = ChannelSession.Services.Secrets.GetSecret("StreamElementsSecret");
+                string clientSecret = ServiceManager.Get<SecretsService>().GetSecret("StreamElementsSecret");
 
                 List<KeyValuePair<string, string>> bodyContent = new List<KeyValuePair<string, string>>();
                 bodyContent.Add(new KeyValuePair<string, string>("grant_type", "refresh_token"));
@@ -267,14 +262,14 @@ namespace MixItUp.Base.Services.External
 
         private async void Socket_OnDisconnected(object sender, EventArgs e)
         {
-            ChannelSession.DisconnectionOccurred("StreamElements");
+            ChannelSession.DisconnectionOccurred(MixItUp.Base.Resources.StreamElements);
 
             do
             {
                 await Task.Delay(5000);
             } while (!await this.ConnectSocket());
 
-            ChannelSession.ReconnectionOccurred("StreamElements");
+            ChannelSession.ReconnectionOccurred(MixItUp.Base.Resources.StreamElements);
         }
 
         private async Task<bool> ConnectSocket()

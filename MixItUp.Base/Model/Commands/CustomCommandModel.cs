@@ -1,5 +1,6 @@
 ﻿using MixItUp.Base.Model.Currency;
 using MixItUp.Base.Services;
+using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 
@@ -35,24 +36,8 @@ namespace MixItUp.Base.Model.Commands
 
         public CustomCommandModel(string name) : base(name, CommandTypeEnum.Custom) { }
 
-#pragma warning disable CS0612 // Type or member is obsolete
-        internal CustomCommandModel(MixItUp.Base.Commands.CustomCommand command)
-            : base(command)
-        {
-            if (command != null)
-            {
-                this.Name = command.Name;
-                this.Type = CommandTypeEnum.Custom;
-            }
-            else
-            {
-                this.Name = MixItUp.Base.Resources.CustomCommand;
-                this.Type = CommandTypeEnum.Custom;
-            }
-        }
-#pragma warning restore CS0612 // Type or member is obsolete
-
-        protected CustomCommandModel() : base() { }
+        [Obsolete]
+        public CustomCommandModel() : base() { }
 
         public override Dictionary<string, string> GetTestSpecialIdentifiers() { return CustomCommandModel.GetCustomTestSpecialIdentifiers(this.Name); }
     }

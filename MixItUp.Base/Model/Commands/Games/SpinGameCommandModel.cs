@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Threading.Tasks;
@@ -17,21 +18,8 @@ namespace MixItUp.Base.Model.Commands.Games
             this.Outcomes = new List<GameOutcomeModel>(outcomes);
         }
 
-#pragma warning disable CS0612 // Type or member is obsolete
-        internal SpinGameCommandModel(Base.Commands.SpinGameCommand command)
-            : base(command, GameCommandTypeEnum.Spin)
-        {
-            this.Outcomes = new List<GameOutcomeModel>(command.Outcomes.Select(o => new GameOutcomeModel(o)));
-        }
-
-        internal SpinGameCommandModel(Base.Commands.VendingMachineGameCommand command)
-            : base(command, GameCommandTypeEnum.Spin)
-        {
-            this.Outcomes = new List<GameOutcomeModel>(command.Outcomes.Select(o => new GameOutcomeModel(o)));
-        }
-#pragma warning restore CS0612 // Type or member is obsolete
-
-        private SpinGameCommandModel() { }
+        [Obsolete]
+        public SpinGameCommandModel() : base() { }
 
         public override IEnumerable<CommandModelBase> GetInnerCommands() { return this.Outcomes.Select(o => o.Command); }
 

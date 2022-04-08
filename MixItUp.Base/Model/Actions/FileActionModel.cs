@@ -1,5 +1,7 @@
 ﻿using MixItUp.Base.Model.Commands;
+using MixItUp.Base.Services;
 using MixItUp.Base.Util;
+using StreamingClient.Base.Util;
 using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
@@ -44,23 +46,23 @@ namespace MixItUp.Base.Model.Actions
             this.LineIndex = lineIndex;
         }
 
-#pragma warning disable CS0612 // Type or member is obsolete
-        internal FileActionModel(MixItUp.Base.Actions.FileAction action)
-            : base(ActionTypeEnum.File)
-        {
-            this.ActionType = (FileActionTypeEnum)(int)action.FileActionType;
-            this.FilePath = action.FilePath;
-            this.TransferText = action.TransferText;
-            this.LineIndex = action.LineIndexToRead;
-        }
-#pragma warning restore CS0612 // Type or member is obsolete
-
-        private FileActionModel() { }
+        [Obsolete]
+        public FileActionModel() { }
 
         protected override async Task PerformInternal(CommandParametersModel parameters)
         {
             string filePath = await ReplaceStringWithSpecialModifiers(this.FilePath, parameters);
             filePath = filePath.ToFilePathString();
+
+            if (this.ActionType == FileActionTypeEnum.ReadFromFile ||
+                this.ActionType == FileActionTypeEnum.ReadSpecificLineFromFile || this.ActionType == FileActionTypeEnum.ReadRandomLineFromFile ||
+                this.ActionType == FileActionTypeEnum.RemoveSpecificLineFromFile || this.ActionType == FileActionTypeEnum.RemoveRandomLineFromFile)
+            {
+                if (!ServiceManager.Get<IFileService>().IsURLPath(filePath) && !ServiceManager.Get<IFileService>().FileExists(filePath))
+                {
+                    Logger.Log(LogLevel.Error, $"Command: {parameters.InitialCommandID} - File Action - File does not exist: {filePath}");
+                }
+            }
 
             string textToWrite = string.Empty;
             string textToRead = string.Empty;
@@ -84,7 +86,7 @@ namespace MixItUp.Base.Model.Actions
                 this.ActionType == FileActionTypeEnum.RemoveSpecificLineFromFile || this.ActionType == FileActionTypeEnum.RemoveRandomLineFromFile ||
                 this.ActionType == FileActionTypeEnum.InsertInFileAtSpecificLine || this.ActionType == FileActionTypeEnum.InsertInFileAtRandomLine)
             {
-                textToRead = await ChannelSession.Services.FileService.ReadFile(filePath);
+                textToRead = await ServiceManager.Get<IFileService>().ReadFile(filePath);
             }
 
             if (this.ActionType == FileActionTypeEnum.ReadSpecificLineFromFile || this.ActionType == FileActionTypeEnum.ReadRandomLineFromFile ||
@@ -162,7 +164,7 @@ namespace MixItUp.Base.Model.Actions
                 this.ActionType == FileActionTypeEnum.RemoveSpecificLineFromFile || this.ActionType == FileActionTypeEnum.RemoveRandomLineFromFile ||
                 this.ActionType == FileActionTypeEnum.InsertInFileAtSpecificLine || this.ActionType == FileActionTypeEnum.InsertInFileAtRandomLine)
             {
-                await ChannelSession.Services.FileService.SaveFile(filePath, textToWrite);
+                await ServiceManager.Get<IFileService>().SaveFile(filePath, textToWrite);
             }
 
             if (this.ActionType == FileActionTypeEnum.AppendToFile)
@@ -171,7 +173,7 @@ namespace MixItUp.Base.Model.Actions
                 {
                     textToWrite = Environment.NewLine + textToWrite;
                 }
-                await ChannelSession.Services.FileService.AppendFile(filePath, textToWrite);
+                await ServiceManager.Get<IFileService>().AppendFile(filePath, textToWrite);
             }
         }
 

@@ -1,4 +1,6 @@
-﻿using MixItUp.Base.Util;
+﻿using MixItUp.Base.Services;
+using MixItUp.Base.Services.External;
+using MixItUp.Base.Util;
 using System.Windows.Input;
 
 namespace MixItUp.Base.ViewModel.Services
@@ -8,12 +10,14 @@ namespace MixItUp.Base.ViewModel.Services
         public ICommand ConnectCommand { get; set; }
         public ICommand DisconnectCommand { get; set; }
 
+        public override string WikiPageName { get { return "voicemod"; } }
+
         public VoicemodServiceControlViewModel()
             : base(Resources.Voicemod)
         {
             this.ConnectCommand = this.CreateCommand(async () =>
             {
-                Result result = await ChannelSession.Services.Voicemod.Connect();
+                Result result = await ServiceManager.Get<IVoicemodService>().Connect();
                 if (result.Success)
                 {
                     this.IsConnected = true;
@@ -27,12 +31,12 @@ namespace MixItUp.Base.ViewModel.Services
 
             this.DisconnectCommand = this.CreateCommand(async () =>
             {
-                await ChannelSession.Services.Voicemod.Disconnect();
+                await ServiceManager.Get<IVoicemodService>().Disconnect();
                 ChannelSession.Settings.EnableVoicemodStudio = false;
                 this.IsConnected = false;
             });
 
-            this.IsConnected = ChannelSession.Services.Voicemod.IsConnected;
+            this.IsConnected = ServiceManager.Get<IVoicemodService>().IsConnected;
         }
     }
 }

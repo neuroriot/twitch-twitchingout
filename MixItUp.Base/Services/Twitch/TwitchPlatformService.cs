@@ -27,12 +27,7 @@ using Twitch.Base.Services.NewAPI;
 
 namespace MixItUp.Base.Services.Twitch
 {
-    public interface ITwitchPlatformService
-    {
-
-    }
-
-    public class TwitchPlatformService : StreamingPlatformServiceBase, ITwitchPlatformService
+    public class TwitchPlatformService : StreamingPlatformServiceBase
     {
         public const string ClientID = "50ipfqzuqbv61wujxcm80zyzqwoqp1";
 
@@ -131,7 +126,7 @@ namespace MixItUp.Base.Services.Twitch
         {
             try
             {
-                TwitchConnection connection = await TwitchConnection.ConnectViaLocalhostOAuthBrowser(TwitchPlatformService.ClientID, ChannelSession.Services.Secrets.GetSecret("TwitchSecret"),
+                TwitchConnection connection = await TwitchConnection.ConnectViaLocalhostOAuthBrowser(TwitchPlatformService.ClientID, ServiceManager.Get<SecretsService>().GetSecret("TwitchSecret"),
                     scopes, forceApprovalPrompt: true, successResponse: OAuthExternalServiceBase.LoginRedirectPageHTML);
                 if (connection != null)
                 {
@@ -143,31 +138,38 @@ namespace MixItUp.Base.Services.Twitch
                 Logger.Log(ex);
                 return new Result<TwitchPlatformService>(ex);
             }
-            return new Result<TwitchPlatformService>("Failed to connect to establish connection to Twitch");
+            return new Result<TwitchPlatformService>(MixItUp.Base.Resources.TwitchFailedToConnect);
         }
 
-        public static DateTimeOffset? GetTwitchDateTime(string dateTime)
+        public static DateTimeOffset GetTwitchDateTime(string dateTime)
         {
-            if (!string.IsNullOrEmpty(dateTime))
+            try
             {
-                if (dateTime.Contains("Z", StringComparison.InvariantCultureIgnoreCase))
+                if (!string.IsNullOrEmpty(dateTime))
                 {
-                    if (DateTimeOffset.TryParse(dateTime, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out DateTimeOffset startUTC))
+                    if (dateTime.Contains("Z", StringComparison.InvariantCultureIgnoreCase))
                     {
-                        return startUTC.ToCorrectLocalTime();
+                        if (DateTimeOffset.TryParse(dateTime, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out DateTimeOffset startUTC))
+                        {
+                            return startUTC.ToCorrectLocalTime();
+                        }
+                    }
+                    else if (DateTime.TryParse(dateTime, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out DateTime start))
+                    {
+                        return new DateTimeOffset(start).ToCorrectLocalTime();
                     }
                 }
-                else if (DateTime.TryParse(dateTime, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out DateTime start))
-                {
-                    return new DateTimeOffset(start).ToCorrectLocalTime();
-                }
             }
-            return null;
+            catch (Exception ex)
+            {
+                Logger.Log($"{dateTime} - {ex}");
+            }
+            return DateTimeOffset.MinValue;
         }
 
         public TwitchConnection Connection { get; private set; }
 
-        public override string Name { get { return "Twitch Connection"; } }
+        public override string Name { get { return MixItUp.Base.Resources.TwitchConnection; } }
 
         public TwitchPlatformService(TwitchConnection connection)
         {
@@ -213,8 +215,6 @@ namespace MixItUp.Base.Services.Twitch
 
         public async Task<CreatedStreamMarkerModel> CreateStreamMarker(UserModel channel, string description) { return await AsyncRunner.RunAsync(this.Connection.NewAPI.Streams.CreateStreamMarker(channel, description)); }
 
-        public async Task<bool> GetStreamTagsForChannel(UserModel channel, IEnumerable<TagModel> tags) { return await AsyncRunner.RunAsync(this.Connection.NewAPI.Tags.UpdateStreamTags(channel, tags)); }
-
         public async Task<StreamModel> GetStream(UserModel user)
         {
             IEnumerable<StreamModel> results = await this.RunAsync(this.Connection.NewAPI.Streams.GetStreamsByUserIDs(userIDs: new List<string>() { user.id }));
@@ -259,7 +259,7 @@ namespace MixItUp.Base.Services.Twitch
             }
         }
 
-        public async Task<IEnumerable<CustomChannelPointRewardModel>> GetCustomChannelPointRewards(UserModel broadcaster) { return await this.RunAsync(this.Connection.NewAPI.ChannelPoints.GetCustomRewards(broadcaster)); }
+        public async Task<IEnumerable<CustomChannelPointRewardModel>> GetCustomChannelPointRewards(UserModel broadcaster, bool managableRewardsOnly = false) { return await this.RunAsync(this.Connection.NewAPI.ChannelPoints.GetCustomRewards(broadcaster, managableRewardsOnly)); }
 
         public async Task<CustomChannelPointRewardModel> UpdateCustomChannelPointReward(UserModel broadcaster, Guid id, JObject jobj) { return await AsyncRunner.RunAsync(this.Connection.NewAPI.ChannelPoints.UpdateCustomReward(broadcaster, id, jobj)); }
 
@@ -277,13 +277,7 @@ namespace MixItUp.Base.Services.Twitch
 
         public async Task<IEnumerable<ChatEmoteModel>> GetEmoteSets(IEnumerable<string> emoteSetIDs) { return await this.RunAsync(this.Connection.NewAPI.Chat.GetEmoteSets(emoteSetIDs)); }
 
-        public async Task<IEnumerable<SubscriptionModel>> GetSubscriptions(UserModel broadcaster, int maxResults = 1) { return await AsyncRunner.RunAsync(this.Connection.NewAPI.Subscriptions.GetAllSubscriptions(broadcaster, maxResults)); }
-
-        public async Task<SubscriptionModel> GetUserSubscription(UserModel broadcaster, UserModel user)
-        {
-            IEnumerable<SubscriptionModel> subscriptions = await AsyncRunner.RunAsync(this.Connection.NewAPI.Subscriptions.GetSubscriptions(broadcaster, new List<string>() { user.id }));
-            return (subscriptions != null) ? subscriptions.FirstOrDefault() : null;
-        }
+        public async Task<SubscriptionModel> GetBroadcasterSubscription(UserModel broadcaster, UserModel user) { return await AsyncRunner.RunAsync(this.Connection.NewAPI.Subscriptions.GetBroadcasterSubscription(broadcaster, user)); }
 
         public async Task<IEnumerable<TeamModel>> GetChannelTeams(UserModel broadcaster) { return await this.RunAsync(this.Connection.NewAPI.Teams.GetChannelTeams(broadcaster)); }
 
@@ -291,7 +285,7 @@ namespace MixItUp.Base.Services.Twitch
 
         public async Task<IEnumerable<ChannelEditorUserModel>> GetChannelEditors(UserModel broadcaster) { return await this.RunAsync(this.Connection.NewAPI.Channels.GetChannelEditorUsers(broadcaster)); }
 
-        public async Task<long> GetSubscriberCount(UserModel broadcaster) { return await AsyncRunner.RunAsync(this.Connection.NewAPI.Subscriptions.GetSubscriptionsCount(broadcaster)); }
+        public async Task<long> GetSubscriberCount(UserModel broadcaster) { return await AsyncRunner.RunAsync(this.Connection.NewAPI.Subscriptions.GetBroadcasterSubscriptionsCount(broadcaster)); }
 
         public async Task<long> GetFollowerCount(UserModel broadcaster) { return await AsyncRunner.RunAsync(this.Connection.NewAPI.Users.GetFollowerCount(broadcaster)); }
 

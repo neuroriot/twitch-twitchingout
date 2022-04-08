@@ -47,12 +47,14 @@ namespace MixItUp.WPF.Controls.Actions
                     case ActionTypeEnum.Overlay: this.ActionControl = new OverlayActionEditorControl(); break;
                     case ActionTypeEnum.OvrStream: this.ActionControl = new OvrStreamActionEditorControl(); break;
                     case ActionTypeEnum.PixelChat: this.ActionControl = new PixelChatActionEditorControl(); break;
+                    case ActionTypeEnum.PolyPop: this.ActionControl = new PolyPopActionEditorControl(); break;
                     case ActionTypeEnum.Serial: this.ActionControl = new SerialActionEditorControl(); break;
                     case ActionTypeEnum.Sound: this.ActionControl = new SoundActionEditorControl(); break;
                     case ActionTypeEnum.SpecialIdentifier: this.ActionControl = new SpecialIdentifierActionEditorControl(); break;
                     case ActionTypeEnum.StreamingSoftware: this.ActionControl = new StreamingSoftwareActionEditorControl(); break;
                     case ActionTypeEnum.Streamlabs: this.ActionControl = new StreamlabsActionEditorControl(); break;
                     case ActionTypeEnum.TextToSpeech: this.ActionControl = new TextToSpeechActionEditorControl(); break;
+                    case ActionTypeEnum.Trovo: this.ActionControl = new TrovoActionEditorControl(); break;
                     case ActionTypeEnum.Twitch: this.ActionControl = new TwitchActionEditorControl(); break;
                     case ActionTypeEnum.Twitter: this.ActionControl = new TwitterActionEditorControl(); break;
                     case ActionTypeEnum.Voicemod: this.ActionControl = new VoicemodActionEditorControl(); break;
@@ -70,7 +72,7 @@ namespace MixItUp.WPF.Controls.Actions
                     }
                 }
             }
-            return Task.FromResult(0);
+            return Task.CompletedTask;
         }
 
         private void ActionContainer_Maximized(object sender, RoutedEventArgs e)

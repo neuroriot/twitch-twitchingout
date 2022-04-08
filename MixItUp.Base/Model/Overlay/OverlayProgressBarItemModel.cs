@@ -1,7 +1,7 @@
-﻿using MixItUp.Base.Commands;
-using MixItUp.Base.Model.Commands;
+﻿using MixItUp.Base.Model.Commands;
 using MixItUp.Base.Model.User;
-using MixItUp.Base.Model.User.Twitch;
+using MixItUp.Base.Services;
+using MixItUp.Base.Services.Twitch;
 using MixItUp.Base.Util;
 using MixItUp.Base.ViewModel.User;
 using Newtonsoft.Json;
@@ -17,13 +17,9 @@ namespace MixItUp.Base.Model.Overlay
         Followers = 0,
         Subscribers = 1,
         Donations = 2,
-        [Obsolete]
-        Sparks = 3,
-        [Obsolete]
-        Milestones = 4,
+
         Custom = 5,
-        [Obsolete]
-        Embers = 6,
+
         Bits = 7,
     }
 
@@ -68,10 +64,6 @@ namespace MixItUp.Base.Model.Overlay
         public int Width { get; set; }
         [DataMember]
         public int Height { get; set; }
-
-        [Obsolete]
-        [DataMember]
-        public CustomCommand GoalReachedCommand { get; set; }
 
         [DataMember]
         public Guid ProgressGoalReachedCommandID { get; set; }
@@ -146,8 +138,11 @@ namespace MixItUp.Base.Model.Overlay
 
             if (this.ProgressBarType == OverlayProgressBarItemTypeEnum.Followers)
             {
-                this.CurrentAmount = await ChannelSession.TwitchUserConnection.GetFollowerCount(ChannelSession.TwitchUserNewAPI);
-
+                // TODO
+                if (ServiceManager.Get<TwitchSessionService>().IsConnected)
+                {
+                    this.CurrentAmount = await ServiceManager.Get<TwitchSessionService>().UserConnection.GetFollowerCount(ServiceManager.Get<TwitchSessionService>().User);
+                }
                 GlobalEvents.OnFollowOccurred += GlobalEvents_OnFollowOccurred;
             }
             else if (this.ProgressBarType == OverlayProgressBarItemTypeEnum.Subscribers)
@@ -233,7 +228,7 @@ namespace MixItUp.Base.Model.Overlay
                     this.GoalReached = true;
                     if (this.ProgressGoalReachedCommand != null)
                     {
-                        await ChannelSession.Services.Command.Queue(this.ProgressGoalReachedCommand);
+                        await ServiceManager.Get<CommandService>().Queue(this.ProgressGoalReachedCommand);
                     }
                 }
             }
@@ -251,13 +246,13 @@ namespace MixItUp.Base.Model.Overlay
             return replacementSets;
         }
 
-        private void GlobalEvents_OnFollowOccurred(object sender, UserViewModel user) { this.AddAmount(1); }
+        private void GlobalEvents_OnFollowOccurred(object sender, UserV2ViewModel user) { this.AddAmount(1); }
 
-        private void GlobalEvents_OnSubscribeOccurred(object sender, UserViewModel user) { this.AddAmount(1); }
+        private void GlobalEvents_OnSubscribeOccurred(object sender, UserV2ViewModel user) { this.AddAmount(1); }
 
-        private void GlobalEvents_OnResubscribeOccurred(object sender, Tuple<UserViewModel, int> user) { this.AddAmount(1); }
+        private void GlobalEvents_OnResubscribeOccurred(object sender, Tuple<UserV2ViewModel, int> user) { this.AddAmount(1); }
 
-        private void GlobalEvents_OnSubscriptionGiftedOccurred(object sender, Tuple<UserViewModel, UserViewModel> e) { this.AddAmount(1); }
+        private void GlobalEvents_OnSubscriptionGiftedOccurred(object sender, Tuple<UserV2ViewModel, UserV2ViewModel> e) { this.AddAmount(1); }
 
         private void GlobalEvents_OnDonationOccurred(object sender, UserDonationModel donation) { this.AddAmount(donation.Amount); }
 

@@ -1,4 +1,8 @@
 ﻿using MixItUp.Base.Model.Commands;
+using MixItUp.Base.Services;
+using MixItUp.Base.Services.Glimesh;
+using MixItUp.Base.Services.Twitch;
+using MixItUp.Base.Services.YouTube;
 using MixItUp.Base.Util;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,16 +21,24 @@ namespace MixItUp.Base.ViewModel.MainControls
 
             this.StreamlootsManageCollectionCommand = this.CreateCommand((parameters) =>
             {
-                if (ChannelSession.TwitchUserConnection != null)
+                if (ServiceManager.Get<TwitchSessionService>().IsConnected)
                 {
-                    ProcessHelper.LaunchLink($"https://www.streamloots.com/{ChannelSession.TwitchUserNewAPI.login}/manage/cards");
+                    ProcessHelper.LaunchLink($"https://www.streamloots.com/{ServiceManager.Get<TwitchSessionService>().Username}/manage/cards");
+                }
+                else if (ServiceManager.Get<YouTubeSessionService>().IsConnected)
+                {
+                    ProcessHelper.LaunchLink($"https://www.streamloots.com/{ServiceManager.Get<YouTubeSessionService>().UserID}/manage/cards");
+                }
+                else if (ServiceManager.Get<GlimeshSessionService>().IsConnected)
+                {
+                    ProcessHelper.LaunchLink($"https://www.streamloots.com/{ServiceManager.Get<GlimeshSessionService>().Username}/manage/cards");
                 }
             });
         }
 
         protected override IEnumerable<CommandModelBase> GetCommands()
         {
-            return ChannelSession.Services.Command.StreamlootsCardCommands.ToList();
+            return ServiceManager.Get<CommandService>().StreamlootsCardCommands.ToList();
         }
 
         private void GroupedCommandsMainControlViewModelBase_OnCommandAddedEdited(object sender, CommandModelBase command)

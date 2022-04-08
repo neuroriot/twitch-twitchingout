@@ -3,7 +3,6 @@ using MixItUp.Base.Model.Requirements;
 using MixItUp.Base.Util;
 using StreamingClient.Base.Util;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -13,6 +12,8 @@ namespace MixItUp.Base.ViewModel.Requirements
     public class CurrencyListRequirementViewModel : ListRequirementViewModelBase
     {
         public ThreadSafeObservableCollection<CurrencyRequirementViewModel> Items { get; set; } = new ThreadSafeObservableCollection<CurrencyRequirementViewModel>();
+
+        public bool RestrictToRequiredAmountOnly { get; set; }
 
         public ICommand AddItemCommand { get; private set; }
 
@@ -50,7 +51,17 @@ namespace MixItUp.Base.ViewModel.Requirements
         }
         private CurrencyModel selectedCurrency;
 
-        public IEnumerable<CurrencyRequirementTypeEnum> RequirementTypes { get { return EnumHelper.GetEnumList<CurrencyRequirementTypeEnum>(); } }
+        public IEnumerable<CurrencyRequirementTypeEnum> RequirementTypes
+        {
+            get
+            {
+                if (this.viewModel.RestrictToRequiredAmountOnly)
+                {
+                    return new List<CurrencyRequirementTypeEnum>() { CurrencyRequirementTypeEnum.RequiredAmount };
+                }
+                return EnumHelper.GetEnumList<CurrencyRequirementTypeEnum>();
+            }
+        }
 
         public CurrencyRequirementTypeEnum SelectedRequirementType
         {
@@ -64,7 +75,7 @@ namespace MixItUp.Base.ViewModel.Requirements
                 this.NotifyPropertyChanged("ShowMinAndMax");
             }
         }
-        private CurrencyRequirementTypeEnum selectedRequirementType;
+        private CurrencyRequirementTypeEnum selectedRequirementType = CurrencyRequirementTypeEnum.RequiredAmount;
 
         public bool ShowOnlyMin { get { return !this.ShowMinAndMax; } }
 

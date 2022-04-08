@@ -33,21 +33,7 @@ namespace MixItUp.Base.Services
         EmberSkillsOnly = 42,
     }
 
-    public interface IModerationService
-    {
-        Task Initialize();
-        void RebuildCache();
-
-        Task<string> ShouldTextBeModerated(UserViewModel user, string text, bool containsLink = false);
-        Task<string> ShouldTextBeFilteredWordModerated(UserViewModel user, string text);
-        string ShouldTextBeExcessiveModerated(UserViewModel user, string text);
-        string ShouldTextBeLinkModerated(UserViewModel user, string text, bool containsLink = false);
-
-        bool DoesUserMeetChatInteractiveParticipationRequirement(UserViewModel user, ChatMessageViewModel message = null);
-        Task SendChatInteractiveParticipationWhisper(UserViewModel user, bool isChat = false);
-    }
-
-    public class ModerationService : IModerationService
+    public class ModerationService
     {
         public const string ModerationReasonSpecialIdentifier = "moderationreason";
 
@@ -73,9 +59,9 @@ namespace MixItUp.Base.Services
 
         public async Task Initialize()
         {
-            if (ChannelSession.Services.FileService.FileExists(ModerationService.CommunityFilteredWordsFilePath))
+            if (ServiceManager.Get<IFileService>().FileExists(ModerationService.CommunityFilteredWordsFilePath))
             {
-                string text = await ChannelSession.Services.FileService.ReadFile(ModerationService.CommunityFilteredWordsFilePath);
+                string text = await ServiceManager.Get<IFileService>().ReadFile(ModerationService.CommunityFilteredWordsFilePath);
                 ModerationService.CommunityFilteredWords = new LockedList<string>(text.Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries));
 
                 foreach (string word in ModerationService.CommunityFilteredWords)
@@ -92,21 +78,21 @@ namespace MixItUp.Base.Services
             this.filteredWords.Clear();
             foreach (string word in ChannelSession.Settings.FilteredWords)
             {
-                this.filteredWords.Add(string.Format(WordRegexFormat, Regex.Escape(word).Replace(WordWildcardRegexEscaped, WordWildcardRegex)));
+                this.filteredWords.Add(word);
             }
 
             this.bannedWords.Clear();
             foreach (string word in ChannelSession.Settings.BannedWords)
             {
-                this.bannedWords.Add(string.Format(WordRegexFormat, Regex.Escape(word).Replace(WordWildcardRegexEscaped, WordWildcardRegex)));
+                this.bannedWords.Add(word);
             }
         }
 
-        public async Task<string> ShouldTextBeModerated(UserViewModel user, string text, bool containsLink = false)
+        public async Task<string> ShouldTextBeModerated(UserV2ViewModel user, string text, bool containsLink = false)
         {
             string reason = null;
 
-            if (string.IsNullOrEmpty(text) || user.IgnoreForQueries)
+            if (string.IsNullOrEmpty(text) || user.IsSpecialtyExcluded)
             {
                 return reason;
             }
@@ -144,11 +130,11 @@ namespace MixItUp.Base.Services
             return reason;
         }
 
-        public async Task<string> ShouldTextBeFilteredWordModerated(UserViewModel user, string text)
+        public async Task<string> ShouldTextBeFilteredWordModerated(UserV2ViewModel user, string text)
         {
             text = PrepareTextForChecking(text);
 
-            if (!user.HasPermissionsTo(ChannelSession.Settings.ModerationFilteredWordsExcempt))
+            if (!user.MeetsRole(ChannelSession.Settings.ModerationFilteredWordsExcemptUserRole))
             {
                 if (ChannelSession.Settings.ModerationUseCommunityFilteredWords)
                 {
@@ -156,25 +142,25 @@ namespace MixItUp.Base.Services
                     {
                         if (Regex.IsMatch(text, word, RegexOptions.IgnoreCase))
                         {
-                            return "The previous message was deleted due to a filtered word";
+                            return string.Format(MixItUp.Base.Resources.ModerationFilteredWord, word);
                         }
                     }
                 }
 
                 foreach (string word in this.filteredWords)
                 {
-                    if (Regex.IsMatch(text, word, RegexOptions.IgnoreCase))
+                    if (Regex.IsMatch(text, string.Format(WordRegexFormat, Regex.Escape(word).Replace(WordWildcardRegexEscaped, WordWildcardRegex)), RegexOptions.IgnoreCase))
                     {
-                        return "The previous message was deleted due to a filtered word";
+                        return string.Format(MixItUp.Base.Resources.ModerationFilteredWord, word);
                     }
                 }
 
                 foreach (string word in this.bannedWords)
                 {
-                    if (Regex.IsMatch(text, word, RegexOptions.IgnoreCase))
+                    if (Regex.IsMatch(text, string.Format(WordRegexFormat, Regex.Escape(word).Replace(WordWildcardRegexEscaped, WordWildcardRegex)), RegexOptions.IgnoreCase))
                     {
-                        await ChannelSession.Services.Chat.BanUser(user);
-                        return "The previous message was deleted due to a banned Word";
+                        await ServiceManager.Get<ChatService>().BanUser(user);
+                        return string.Format(MixItUp.Base.Resources.ModerationBannedWord, word);
                     }
                 }
             }
@@ -182,9 +168,9 @@ namespace MixItUp.Base.Services
             return null;
         }
 
-        public string ShouldTextBeExcessiveModerated(UserViewModel user, string text)
+        public string ShouldTextBeExcessiveModerated(UserV2ViewModel user, string text)
         {
-            if (!user.HasPermissionsTo(ChannelSession.Settings.ModerationChatTextExcempt))
+            if (!user.MeetsRole(ChannelSession.Settings.ModerationChatTextExcemptUserRole))
             {
                 if (ChannelSession.Settings.ModerationCapsBlockCount > 0)
                 {
@@ -196,7 +182,7 @@ namespace MixItUp.Base.Services
 
                     if (count >= ChannelSession.Settings.ModerationCapsBlockCount)
                     {
-                        return "Too Many Caps";
+                        return MixItUp.Base.Resources.ModerationTooManyCaps;
                     }
                 }
 
@@ -235,7 +221,7 @@ namespace MixItUp.Base.Services
 
                     if (count >= ChannelSession.Settings.ModerationPunctuationBlockCount)
                     {
-                        return "Too Many Punctuation/Symbols/Emotes";
+                        return MixItUp.Base.Resources.ModerationTooManyPunctuationSymbolsEmotes;
                     }
                 }
             }
@@ -243,22 +229,22 @@ namespace MixItUp.Base.Services
             return null;
         }
 
-        public string ShouldTextBeLinkModerated(UserViewModel user, string text, bool containsLink = false)
+        public string ShouldTextBeLinkModerated(UserV2ViewModel user, string text, bool containsLink = false)
         {
             text = PrepareTextForChecking(text);
 
-            if (!user.HasPermissionsTo(ChannelSession.Settings.ModerationBlockLinksExcempt))
+            if (!user.MeetsRole(ChannelSession.Settings.ModerationBlockLinksExcemptUserRole))
             {
                 if (ChannelSession.Settings.ModerationBlockLinks && (containsLink || LinkRegex.IsMatch(text)))
                 {
-                    return "No Links";
+                    return MixItUp.Base.Resources.ModerationNoLinks;
                 }
             }
 
             return null;
         }
 
-        public bool DoesUserMeetChatInteractiveParticipationRequirement(UserViewModel user, ChatMessageViewModel message = null)
+        public bool DoesUserMeetChatInteractiveParticipationRequirement(UserV2ViewModel user, ChatMessageViewModel message = null)
         {
             if (ChannelSession.Settings.ModerationChatInteractiveParticipation != ModerationChatInteractiveParticipationEnum.None)
             {
@@ -267,27 +253,27 @@ namespace MixItUp.Base.Services
                     return false;
                 }
 
-                if (user.IgnoreForQueries)
+                if (user.IsSpecialtyExcluded)
                 {
                     return true;
                 }
 
-                if (user.HasPermissionsTo(ChannelSession.Settings.ModerationChatInteractiveParticipationExcempt))
+                if (user.MeetsRole(ChannelSession.Settings.ModerationChatInteractiveParticipationExcemptUserRole))
                 {
                     return true;
                 }
 
-                if (ChannelSession.Settings.ModerationChatInteractiveParticipation == ModerationChatInteractiveParticipationEnum.FollowerOnly && !user.HasPermissionsTo(UserRoleEnum.Follower))
+                if (ChannelSession.Settings.ModerationChatInteractiveParticipation == ModerationChatInteractiveParticipationEnum.FollowerOnly && !user.MeetsRole(UserRoleEnum.Follower))
                 {
                     return false;
                 }
 
-                if (ChannelSession.Settings.ModerationChatInteractiveParticipation == ModerationChatInteractiveParticipationEnum.SubscriberOnly && !user.HasPermissionsTo(UserRoleEnum.Subscriber))
+                if (ChannelSession.Settings.ModerationChatInteractiveParticipation == ModerationChatInteractiveParticipationEnum.SubscriberOnly && !user.MeetsRole(UserRoleEnum.Subscriber))
                 {
                     return false;
                 }
 
-                if (ChannelSession.Settings.ModerationChatInteractiveParticipation == ModerationChatInteractiveParticipationEnum.ModeratorOnly && !user.HasPermissionsTo(UserRoleEnum.Mod))
+                if (ChannelSession.Settings.ModerationChatInteractiveParticipation == ModerationChatInteractiveParticipationEnum.ModeratorOnly && !user.MeetsRole(UserRoleEnum.Moderator))
                 {
                     return false;
                 }
@@ -317,7 +303,7 @@ namespace MixItUp.Base.Services
                     return false;
                 }
 
-                TimeSpan viewingLength = TimeSpan.FromMinutes(user.Data.ViewingMinutes);
+                TimeSpan viewingLength = TimeSpan.FromMinutes(user.OnlineViewingMinutes);
                 if (ChannelSession.Settings.ModerationChatInteractiveParticipation == ModerationChatInteractiveParticipationEnum.ViewingTenMinutes && viewingLength.TotalMinutes < 10)
                 {
                     return false;
@@ -342,58 +328,58 @@ namespace MixItUp.Base.Services
             return true;
         }
 
-        public async Task SendChatInteractiveParticipationWhisper(UserViewModel user, bool isChat = false)
+        public async Task SendChatInteractiveParticipationWhisper(UserV2ViewModel user, bool isChat = false)
         {
             if (user != null)
             {
                 string reason = string.Empty;
                 if (ChannelSession.Settings.ModerationChatInteractiveParticipation == ModerationChatInteractiveParticipationEnum.FollowerOnly)
                 {
-                    reason = "Followers";
+                    reason = MixItUp.Base.Resources.Followers;
                 }
                 else if (ChannelSession.Settings.ModerationChatInteractiveParticipation == ModerationChatInteractiveParticipationEnum.SubscriberOnly)
                 {
-                    reason = "Subscribers";
+                    reason = MixItUp.Base.Resources.Subscribers;
                 }
                 else if (ChannelSession.Settings.ModerationChatInteractiveParticipation == ModerationChatInteractiveParticipationEnum.ModeratorOnly)
                 {
-                    reason = "Moderators";
+                    reason = MixItUp.Base.Resources.Moderators;
                 }
                 else if (ChannelSession.Settings.ModerationChatInteractiveParticipation == ModerationChatInteractiveParticipationEnum.AccountHour)
                 {
-                    reason = "accounts older than 1 hour";
+                    reason = MixItUp.Base.Resources.ModerationAccountsOlderThanOneHour;
                 }
                 else if (ChannelSession.Settings.ModerationChatInteractiveParticipation == ModerationChatInteractiveParticipationEnum.AccountDay)
                 {
-                    reason = "accounts older than 1 day";
+                    reason = MixItUp.Base.Resources.ModerationAccountsOlderThanOneDay;
                 }
                 else if (ChannelSession.Settings.ModerationChatInteractiveParticipation == ModerationChatInteractiveParticipationEnum.AccountWeek)
                 {
-                    reason = "accounts older than 1 week";
+                    reason = MixItUp.Base.Resources.ModerationAccountsOlderThanOneWeek;
                 }
                 else if (ChannelSession.Settings.ModerationChatInteractiveParticipation == ModerationChatInteractiveParticipationEnum.AccountMonth)
                 {
-                    reason = "accounts older than 1 month";
+                    reason = MixItUp.Base.Resources.ModerationAccountsOlderThanOneMonth;
                 }
                 else if (ChannelSession.Settings.ModerationChatInteractiveParticipation == ModerationChatInteractiveParticipationEnum.ViewingTenMinutes)
                 {
-                    reason = "viewers who have watched for 10 minutes";
+                    reason = MixItUp.Base.Resources.ModerationViewingMoreThanTenMinutes;
                 }
                 else if (ChannelSession.Settings.ModerationChatInteractiveParticipation == ModerationChatInteractiveParticipationEnum.ViewingThirtyMinutes)
                 {
-                    reason = "viewers who have watched for 30 minutes";
+                    reason = MixItUp.Base.Resources.ModerationViewingMoreThanThirtyMinutes;
                 }
                 else if (ChannelSession.Settings.ModerationChatInteractiveParticipation == ModerationChatInteractiveParticipationEnum.ViewingOneHour)
                 {
-                    reason = "viewers who have watched for 1 hour";
+                    reason = MixItUp.Base.Resources.ModerationViewingMoreThanOneHour;
                 }
                 else if (ChannelSession.Settings.ModerationChatInteractiveParticipation == ModerationChatInteractiveParticipationEnum.ViewingTwoHours)
                 {
-                    reason = "viewers who have watched for 2 hours";
+                    reason = MixItUp.Base.Resources.ModerationViewingMoreThanTwoHours;
                 }
                 else if (ChannelSession.Settings.ModerationChatInteractiveParticipation == ModerationChatInteractiveParticipationEnum.ViewingTenHours)
                 {
-                    reason = "viewers who have watched for 10 hours";
+                    reason = MixItUp.Base.Resources.ModerationViewingMoreThanTenHours;
                 }
 
                 if (isChat)
@@ -404,7 +390,7 @@ namespace MixItUp.Base.Services
                     }
 
                     this.chatParticipationLastErrorMessage = DateTimeOffset.Now.AddSeconds(10);
-                    await ChannelSession.Services.Chat.SendMessage(string.Format("@{0}: Your message has been deleted because only {1} can participate currently.", user.Username, reason), platform: user.Platform);
+                    await ServiceManager.Get<ChatService>().SendMessage(string.Format(MixItUp.Base.Resources.ModerationParticipationMessageDeleted, user.Username, reason), platform: user.Platform);
                 }
             }
         }

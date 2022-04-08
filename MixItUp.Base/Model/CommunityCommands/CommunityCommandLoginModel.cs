@@ -1,4 +1,5 @@
-﻿using System;
+﻿using StreamingClient.Base.Model.OAuth;
+using System;
 using System.Runtime.Serialization;
 
 namespace MixItUp.Base.Model.Store
@@ -11,6 +12,12 @@ namespace MixItUp.Base.Model.Store
 
         [DataMember]
         public string TwitchAccessToken { get; set; }
+        [DataMember]
+        public OAuthTokenModel YouTubeOAuthToken { get; set; }
+        [DataMember]
+        public string TrovoAccessToken { get; set; }
+        [DataMember]
+        public string GlimeshAccessToken { get; set; }
     }
 
     [DataContract]

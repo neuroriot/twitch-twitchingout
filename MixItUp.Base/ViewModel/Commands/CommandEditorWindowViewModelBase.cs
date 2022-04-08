@@ -1,12 +1,12 @@
 ﻿using MixItUp.Base.Model.Actions;
 using MixItUp.Base.Model.Commands;
+using MixItUp.Base.Services;
 using MixItUp.Base.Util;
 using MixItUp.Base.ViewModel.Actions;
 using MixItUp.Base.ViewModel.Requirements;
 using StreamingClient.Base.Util;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -16,38 +16,24 @@ namespace MixItUp.Base.ViewModel.Commands
     public abstract class CommandEditorWindowViewModelBase : ActionEditorListControlViewModel
     {
         public const string MixItUpCommandFileExtension = ".miucommand";
-        public const string MixItUpOldCommandFileExtension = ".mixitupc";
 
         public static string OpenCommandFileBrowser()
         {
-            return ChannelSession.Services.FileService.ShowOpenFileDialog(string.Format("Mix It Up Command (*{0})|*{0};*{1}|All files (*.*)|*.*", MixItUpCommandFileExtension, MixItUpOldCommandFileExtension));
+            return ServiceManager.Get<IFileService>().ShowOpenFileDialog(string.Format("Mix It Up Command (*{0})|*{0}|All files (*.*)|*.*", MixItUpCommandFileExtension));
         }
 
-        public static Task<CommandModelBase> ImportCommandFromFile(string filePath)
+        public static async Task<CommandModelBase> ImportCommandFromFile(string filePath)
         {
-            return ImportCommandFromFile<CommandModelBase>(filePath);
+            CommandModelBase command = await ImportCommandFromFile<CommandModelBase>(filePath);
+            SettingsV3Upgrader.MultiPlatformCommandUpgrade(command);
+            return command;
         }
 
         public static async Task<T> ImportCommandFromFile<T>(string filePath) where T : CommandModelBase
         {
             if (!string.IsNullOrEmpty(filePath))
             {
-                if (Path.GetExtension(filePath).Equals(MixItUpOldCommandFileExtension))
-                {
-#pragma warning disable CS0612 // Type or member is obsolete
-                    MixItUp.Base.Commands.CommandBase command = await FileSerializerHelper.DeserializeFromFile<MixItUp.Base.Commands.CommandBase>(filePath);
-                    ActionGroupCommandModel actionGroup = new ActionGroupCommandModel(command.Name, false);
-                    foreach (MixItUp.Base.Actions.ActionBase action in command.Actions)
-                    {
-                        actionGroup.Actions.AddRange(ActionModelBase.UpgradeAction(action));
-                    }
-                    return actionGroup as T;
-#pragma warning restore CS0612 // Type or member is obsolete
-                }
-                else
-                {
-                    return await FileSerializerHelper.DeserializeFromFile<T>(filePath);
-                }
+                return await FileSerializerHelper.DeserializeFromFile<T>(filePath);
             }
             return null;
         }
@@ -56,7 +42,7 @@ namespace MixItUp.Base.ViewModel.Commands
         {
             if (command != null)
             {
-                string fileName = ChannelSession.Services.FileService.ShowSaveFileDialog(command.Name + MixItUpCommandFileExtension);
+                string fileName = ServiceManager.Get<IFileService>().ShowSaveFileDialog(command.Name + MixItUpCommandFileExtension, MixItUp.Base.Resources.MixItUpCommandFileFormatFilter);
                 if (!string.IsNullOrEmpty(fileName))
                 {
                     await FileSerializerHelper.SerializeToFile(fileName, command);
@@ -78,7 +64,7 @@ namespace MixItUp.Base.ViewModel.Commands
                 }
             }
 
-            await ChannelSession.Services.Command.RunDirectly(new CommandInstanceModel(command, CommandParametersModel.GetTestParameters(testSpecialIdentifiers)));
+            await ServiceManager.Get<CommandService>().RunDirectly(new CommandInstanceModel(command, CommandParametersModel.GetTestParameters(testSpecialIdentifiers)));
             if (command.Requirements.Cooldown != null)
             {
                 command.Requirements.Cooldown.Reset();
@@ -96,7 +82,7 @@ namespace MixItUp.Base.ViewModel.Commands
                 }
             }
 
-            await ChannelSession.Services.Command.RunDirectly(new CommandInstanceModel(actions, CommandParametersModel.GetTestParameters(testSpecialIdentifiers)));
+            await ServiceManager.Get<CommandService>().RunDirectly(new CommandInstanceModel(actions, CommandParametersModel.GetTestParameters(testSpecialIdentifiers)));
         }
 
         public CommandTypeEnum Type
@@ -121,7 +107,7 @@ namespace MixItUp.Base.ViewModel.Commands
         }
         private string name;
 
-        public IEnumerable<string> CommandGroups { get { return ChannelSession.Settings.CommandGroups.Keys.ToList(); } }
+        public IEnumerable<string> CommandGroups { get { return ChannelSession.Settings.CommandGroups.Keys.ToList().OrderBy(cg => cg); } }
 
         public string SelectedCommandGroup
         {
@@ -214,6 +200,12 @@ namespace MixItUp.Base.ViewModel.Commands
                 try
                 {
                     string filename = CommandEditorWindowViewModelBase.OpenCommandFileBrowser();
+
+                    if (string.IsNullOrEmpty(filename))
+                    {
+                        return;
+                    }
+
                     CommandModelBase command = null;
 
                     // Check if the imported command type matches the currently edited command. If so, import additional information.
@@ -273,12 +265,12 @@ namespace MixItUp.Base.ViewModel.Commands
         public virtual Task UpdateExistingCommand(CommandModelBase command)
         {
             command.Name = this.Name;
-            return Task.FromResult(0);
+            return Task.CompletedTask;
         }
 
         public abstract Task SaveCommandToSettings(CommandModelBase command);
 
-        protected override async Task OnLoadedInternal()
+        protected override async Task OnOpenInternal()
         {
             if (this.existingCommand != null)
             {
@@ -351,7 +343,7 @@ namespace MixItUp.Base.ViewModel.Commands
             return command;
         }
 
-        protected virtual Task UpdateCommandGroup() { return Task.FromResult(0); }
+        protected virtual Task UpdateCommandGroup() { return Task.CompletedTask; }
         protected virtual void SelectedCommandGroupChanged() { }
 
         protected CommandGroupSettingsModel GetCommandGroup()

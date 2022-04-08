@@ -28,6 +28,8 @@ namespace MixItUp.Base.ViewModel.MainControls
 
         public ThreadSafeObservableCollection<CommunityCommandCategoryViewModel> Categories { get; set; } = new ThreadSafeObservableCollection<CommunityCommandCategoryViewModel>();
 
+        public ICommand CategorySeeMoreCommand { get; set; }
+
         public string SearchText
         {
             get { return this.searchText; }
@@ -223,11 +225,25 @@ namespace MixItUp.Base.ViewModel.MainControls
                 }
             });
 
+            this.CategorySeeMoreCommand = this.CreateCommand(async (searchTag) =>
+            {
+                try
+                {
+                    this.CurrentResultsPage = 0;
+                    this.SearchText = searchTag.ToString();
+                    await this.PerformSearch();
+                }
+                catch (Exception ex)
+                {
+                    Logger.Log(ex);
+                }
+            });
+
             this.GetCommandDetailsCommand = this.CreateCommand(async (id) =>
             {
                 try
                 {
-                    CommunityCommandDetailsModel commandDetails = await ChannelSession.Services.CommunityCommandsService.GetCommandDetails((Guid)id);
+                    CommunityCommandDetailsModel commandDetails = await ServiceManager.Get<MixItUpService>().GetCommandDetails((Guid)id);
                     if (commandDetails != null)
                     {
                         this.CommandDetails = new CommunityCommandDetailsViewModel(commandDetails);
@@ -277,7 +293,7 @@ namespace MixItUp.Base.ViewModel.MainControls
             {
                 try
                 {
-                    CommunityCommandDetailsModel commandDetails = await ChannelSession.Services.CommunityCommandsService.GetCommandDetails((Guid)id);
+                    CommunityCommandDetailsModel commandDetails = await ServiceManager.Get<MixItUpService>().GetCommandDetails((Guid)id);
                     if (commandDetails != null)
                     {
                         this.CommandDetails = new MyCommunityCommandDetailsViewModel(commandDetails);
@@ -298,7 +314,7 @@ namespace MixItUp.Base.ViewModel.MainControls
                 {
                     if (this.CommandDetails.IsMyCommand && await DialogHelper.ShowConfirmation(MixItUp.Base.Resources.CommunityCommandsDeleteMyCommandConfirmation))
                     {
-                        await ChannelSession.Services.CommunityCommandsService.DeleteCommand(this.CommandDetails.ID);
+                        await ServiceManager.Get<MixItUpService>().DeleteCommand(this.CommandDetails.ID);
 
                         this.GetMyCommandsCommand.Execute(null);
                     }
@@ -346,7 +362,7 @@ namespace MixItUp.Base.ViewModel.MainControls
 
         public async Task ReviewCommand(int rating, string review)
         {
-            await ChannelSession.Services.CommunityCommandsService.AddReview(new CommunityCommandReviewModel()
+            await ServiceManager.Get<MixItUpService>().AddReview(new CommunityCommandReviewModel()
             {
                 CommandID = this.CommandDetails.ID,
                 Rating = rating,
@@ -358,7 +374,7 @@ namespace MixItUp.Base.ViewModel.MainControls
 
         public async Task ReportCommand(string report)
         {
-            await ChannelSession.Services.CommunityCommandsService.ReportCommand(new CommunityCommandReportModel()
+            await ServiceManager.Get<MixItUpService>().ReportCommand(new CommunityCommandReportModel()
             {
                 CommandID = this.CommandDetails.ID,
                 Report = report
@@ -385,7 +401,7 @@ namespace MixItUp.Base.ViewModel.MainControls
                 try
                 {
                     this.Categories.Clear();
-                    foreach (CommunityCommandCategoryModel category in await ChannelSession.Services.CommunityCommandsService.GetHomeCategories())
+                    foreach (CommunityCommandCategoryModel category in await ServiceManager.Get<MixItUpService>().GetHomeCategories())
                     {
                         if (category.Commands.Count > 0)
                         {
@@ -415,7 +431,7 @@ namespace MixItUp.Base.ViewModel.MainControls
             {
                 this.SearchResults.Clear();
 
-                CommunityCommandsSearchResult results = await ChannelSession.Services.CommunityCommandsService.SearchCommands(this.SearchText, this.GetResultsPageSkip, SearchResultsPageSize);
+                CommunityCommandsSearchResult results = await ServiceManager.Get<MixItUpService>().SearchCommands(this.SearchText, this.GetResultsPageSkip, SearchResultsPageSize);
                 foreach (CommunityCommandModel command in results.Results)
                 {
                     this.SearchResults.Add(new CommunityCommandViewModel(command));
@@ -431,7 +447,7 @@ namespace MixItUp.Base.ViewModel.MainControls
         {
             this.UserCommands.Clear();
 
-            CommunityCommandsSearchResult results = await ChannelSession.Services.CommunityCommandsService.GetCommandsByUser(this.CommandDetails.UserID, this.GetResultsPageSkip, SearchResultsPageSize);
+            CommunityCommandsSearchResult results = await ServiceManager.Get<MixItUpService>().GetCommandsByUser(this.CommandDetails.UserID, this.GetResultsPageSkip, SearchResultsPageSize);
             foreach (CommunityCommandModel command in results.Results)
             {
                 this.UserCommands.Add(new CommunityCommandViewModel(command));
@@ -446,7 +462,7 @@ namespace MixItUp.Base.ViewModel.MainControls
         {
             this.MyCommands.Clear();
 
-            CommunityCommandsSearchResult results = await ChannelSession.Services.CommunityCommandsService.GetMyCommands(this.GetResultsPageSkip, SearchResultsPageSize);
+            CommunityCommandsSearchResult results = await ServiceManager.Get<MixItUpService>().GetMyCommands(this.GetResultsPageSkip, SearchResultsPageSize);
             foreach (CommunityCommandModel command in results.Results)
             {
                 this.MyCommands.Add(new CommunityCommandViewModel(command));

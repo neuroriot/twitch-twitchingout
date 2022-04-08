@@ -26,6 +26,9 @@ namespace MixItUp.Base.Model.Overlay
         [DataMember]
         public int RefreshTime { get; set; }
 
+        [Obsolete]
+        public OverlayWidgetModel() { }
+
         public OverlayWidgetModel(string name, string overlayName, OverlayItemModelBase item, int refreshTime)
         {
             this.Name = name;
@@ -34,9 +37,6 @@ namespace MixItUp.Base.Model.Overlay
             this.RefreshTime = refreshTime;
             this.IsEnabled = true;
         }
-
-        [Obsolete]
-        public OverlayWidgetModel() { }
 
         [JsonIgnore]
         public virtual bool SupportsTestData { get { return (this.Item != null) ? this.Item.SupportsTestData : false; } }
@@ -90,7 +90,7 @@ namespace MixItUp.Base.Model.Overlay
 
         public async Task ShowItem(CommandParametersModel parameters)
         {
-            IOverlayEndpointService overlay = this.GetOverlay();
+            OverlayEndpointService overlay = this.GetOverlay();
             if (overlay != null)
             {
                 await overlay.ShowItem(this.Item, parameters);
@@ -101,7 +101,7 @@ namespace MixItUp.Base.Model.Overlay
 
         public async Task UpdateItem(CommandParametersModel parameters)
         {
-            IOverlayEndpointService overlay = this.GetOverlay();
+            OverlayEndpointService overlay = this.GetOverlay();
             if (overlay != null)
             {
                 await overlay.UpdateItem(this.Item, parameters);
@@ -110,22 +110,22 @@ namespace MixItUp.Base.Model.Overlay
 
         public async Task HideItem()
         {
-            IOverlayEndpointService overlay = this.GetOverlay();
+            OverlayEndpointService overlay = this.GetOverlay();
             if (overlay != null)
             {
                 await overlay.HideItem(this.Item);
             }
         }
 
-        private IOverlayEndpointService GetOverlay()
+        private OverlayEndpointService GetOverlay()
         {
-            string overlayName = (string.IsNullOrEmpty(this.OverlayName)) ? ChannelSession.Services.Overlay.DefaultOverlayName : this.OverlayName;
-            var overlays = ChannelSession.Services.Overlay.GetOverlayNames();
+            string overlayName = (string.IsNullOrEmpty(this.OverlayName)) ? ServiceManager.Get<OverlayService>().DefaultOverlayName : this.OverlayName;
+            var overlays = ServiceManager.Get<OverlayService>().GetOverlayNames();
             if (!overlays.Contains(overlayName))
             {
-                this.OverlayName = ChannelSession.Services.Overlay.DefaultOverlayName;
+                this.OverlayName = ServiceManager.Get<OverlayService>().DefaultOverlayName;
             }
-            return ChannelSession.Services.Overlay.GetOverlay(overlayName);
+            return ServiceManager.Get<OverlayService>().GetOverlay(overlayName);
         }
 
         private async void Item_OnChangeState(object sender, bool state)

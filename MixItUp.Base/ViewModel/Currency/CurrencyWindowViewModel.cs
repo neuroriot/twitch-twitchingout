@@ -4,18 +4,18 @@ using MixItUp.Base.Model.Commands;
 using MixItUp.Base.Model.Currency;
 using MixItUp.Base.Model.Requirements;
 using MixItUp.Base.Model.User;
+using MixItUp.Base.Model.User.Platform;
+using MixItUp.Base.Services;
 using MixItUp.Base.Util;
 using MixItUp.Base.ViewModel.User;
 using MixItUp.Base.ViewModels;
 using StreamingClient.Base.Util;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
-using Twitch.Base.Models.NewAPI.Users;
 
 namespace MixItUp.Base.ViewModel.Currency
 {
@@ -110,8 +110,6 @@ namespace MixItUp.Base.ViewModel.Currency
                     this.OnlineRateAmount = 1;
                     this.OnlineRateInterval = 1;
 
-                    this.OfflineRate = CurrencyAcquireRateTypeEnum.Disabled;
-
                     this.RegularBonus = 0;
                     this.SubscriberBonus = 0;
                     this.ModeratorBonus = 0;
@@ -152,59 +150,6 @@ namespace MixItUp.Base.ViewModel.Currency
             }
         }
         private int onlineRateInterval = 0;
-
-        public CurrencyAcquireRateTypeEnum OfflineRate
-        {
-            get { return this.offlineRate; }
-            set
-            {
-                this.offlineRate = value;
-                this.NotifyPropertyChanged();
-                this.NotifyPropertyChanged("IsOnlineRateTimeBased");
-                this.NotifyPropertyChanged("IsCustomOfflineRate");
-
-                if (this.OfflineRate == CurrencyAcquireRateTypeEnum.Minutes || this.OfflineRate == CurrencyAcquireRateTypeEnum.Hours)
-                {
-                    this.OfflineRateAmount = 1;
-                    if (this.OfflineRate == CurrencyAcquireRateTypeEnum.Minutes)
-                    {
-                        this.OfflineRateInterval = 1;
-                    }
-                    else if (this.OfflineRate == CurrencyAcquireRateTypeEnum.Hours)
-                    {
-                        this.OfflineRateInterval = 60;
-                    }
-                }
-                else
-                {
-                    this.OfflineRateAmount = 0;
-                    this.OfflineRateInterval = 0;
-                }
-            }
-        }
-        private CurrencyAcquireRateTypeEnum offlineRate;
-        public List<CurrencyAcquireRateTypeEnum> OfflineRates { get; private set; } = new List<CurrencyAcquireRateTypeEnum>() { CurrencyAcquireRateTypeEnum.Minutes, CurrencyAcquireRateTypeEnum.Hours, CurrencyAcquireRateTypeEnum.Custom, CurrencyAcquireRateTypeEnum.Disabled };
-        public bool IsCustomOfflineRate { get { return this.OfflineRate == CurrencyAcquireRateTypeEnum.Custom; } }
-        public int OfflineRateAmount
-        {
-            get { return this.offlineRateAmount; }
-            set
-            {
-                this.offlineRateAmount = value;
-                this.NotifyPropertyChanged();
-            }
-        }
-        private int offlineRateAmount = 0;
-        public int OfflineRateInterval
-        {
-            get { return this.offlineRateInterval; }
-            set
-            {
-                this.offlineRateInterval = value;
-                this.NotifyPropertyChanged();
-            }
-        }
-        private int offlineRateInterval = 0;
 
         public int RegularBonus
         {
@@ -417,25 +362,6 @@ namespace MixItUp.Base.ViewModel.Currency
             this.OnlineRateAmount = this.Currency.AcquireAmount;
             this.OnlineRateInterval = this.Currency.AcquireInterval;
 
-            if (this.Currency.IsOfflineIntervalMinutes)
-            {
-                this.OfflineRate = CurrencyAcquireRateTypeEnum.Minutes;
-            }
-            else if (this.Currency.IsOfflineIntervalHours)
-            {
-                this.OfflineRate = CurrencyAcquireRateTypeEnum.Hours;
-            }
-            else if (this.Currency.IsOfflineIntervalDisabled)
-            {
-                this.OfflineRate = CurrencyAcquireRateTypeEnum.Disabled;
-            }
-            else
-            {
-                this.OfflineRate = CurrencyAcquireRateTypeEnum.Custom;
-            }
-            this.OfflineRateAmount = this.Currency.OfflineAcquireAmount;
-            this.OfflineRateInterval = this.Currency.OfflineAcquireInterval;
-
             this.RegularBonus = this.Currency.RegularBonus;
             this.SubscriberBonus = this.Currency.SubscriberBonus;
             this.ModeratorBonus = this.Currency.ModeratorBonus;
@@ -469,7 +395,6 @@ namespace MixItUp.Base.ViewModel.Currency
             }
 
             this.OnlineRate = CurrencyAcquireRateTypeEnum.Minutes;
-            this.OfflineRate = CurrencyAcquireRateTypeEnum.Disabled;
 
             this.AutomaticResetRate = CurrencyResetRateEnum.Never;
 
@@ -529,22 +454,42 @@ namespace MixItUp.Base.ViewModel.Currency
                             return;
                         }
 
-                        await ChannelSession.Settings.LoadAllUserData();
+                        await ServiceManager.Get<UserService>().LoadAllUserData();
 
                         await this.Currency.Reset();
-                        foreach (MixItUp.Base.Model.User.UserDataModel userData in ChannelSession.Settings.UserData.Values)
+                        foreach (UserV2Model userData in ChannelSession.Settings.Users.Values.ToList())
                         {
-                            int intervalsToGive = userData.ViewingMinutes / this.Currency.AcquireInterval;
-                            this.Currency.AddAmount(userData, this.Currency.AcquireAmount * intervalsToGive);
-                            if (userData.TwitchUserRoles.Contains(UserRoleEnum.Mod) || userData.TwitchUserRoles.Contains(UserRoleEnum.ChannelEditor))
+                            int minutes = 0;
+                            bool moderatorBonus = false;
+                            bool subscriberBonus = false;
+
+                            minutes += userData.OnlineViewingMinutes;
+                            foreach (UserPlatformV2ModelBase userPlatformData in userData.GetAllPlatformData())
                             {
-                                this.Currency.AddAmount(userData, this.Currency.ModeratorBonus * intervalsToGive);
+                                if (userPlatformData.Roles.Contains(UserRoleEnum.Moderator))
+                                {
+                                    moderatorBonus = true;
+                                }
+                                if (userPlatformData.Roles.Contains(UserRoleEnum.Subscriber))
+                                {
+                                    subscriberBonus = true;
+                                }
                             }
-                            else if (userData.TwitchUserRoles.Contains(UserRoleEnum.Subscriber))
+
+                            int intervalsToGive = minutes / this.Currency.AcquireInterval;
+
+                            UserV2ViewModel user = new UserV2ViewModel(userData);
+
+                            this.Currency.AddAmount(user, this.Currency.AcquireAmount * intervalsToGive);
+                            if (moderatorBonus)
                             {
-                                this.Currency.AddAmount(userData, this.Currency.SubscriberBonus * intervalsToGive);
+                                this.Currency.AddAmount(user, this.Currency.ModeratorBonus * intervalsToGive);
                             }
-                            ChannelSession.Settings.UserData.ManualValueChanged(userData.ID);
+                            else if (subscriberBonus)
+                            {
+                                this.Currency.AddAmount(user, this.Currency.SubscriberBonus * intervalsToGive);
+                            }
+                            ChannelSession.Settings.Users.ManualValueChanged(userData.ID);
                         }
                     }
                 }
@@ -558,13 +503,15 @@ namespace MixItUp.Base.ViewModel.Currency
                 {
                     try
                     {
-                        string filePath = ChannelSession.Services.FileService.ShowOpenFileDialog();
+                        string filePath = ServiceManager.Get<IFileService>().ShowOpenFileDialog();
                         if (!string.IsNullOrEmpty(filePath))
                         {
-                            string fileContents = await ChannelSession.Services.FileService.ReadFile(filePath);
+                            string fileContents = await ServiceManager.Get<IFileService>().ReadFile(filePath);
                             string[] lines = fileContents.Split(new string[] { Environment.NewLine, "\n" }, StringSplitOptions.RemoveEmptyEntries);
                             if (lines.Count() > 0)
                             {
+                                await ServiceManager.Get<UserService>().LoadAllUserData();
+
                                 foreach (string line in lines)
                                 {
                                     long id = 0;
@@ -576,7 +523,7 @@ namespace MixItUp.Base.ViewModel.Currency
                                     {
                                         if (!int.TryParse(segments[1], out amount))
                                         {
-                                            throw new InvalidOperationException("File is not in the correct format");
+                                            throw new InvalidOperationException(MixItUp.Base.Resources.FileIsNotInCorrectFormat);
                                         }
 
                                         if (!long.TryParse(segments[0], out id))
@@ -588,67 +535,38 @@ namespace MixItUp.Base.ViewModel.Currency
                                     {
                                         if (!long.TryParse(segments[0], out id))
                                         {
-                                            throw new InvalidOperationException("File is not in the correct format");
+                                            throw new InvalidOperationException(MixItUp.Base.Resources.FileIsNotInCorrectFormat);
                                         }
 
                                         if (!int.TryParse(segments[2], out amount))
                                         {
-                                            throw new InvalidOperationException("File is not in the correct format");
+                                            throw new InvalidOperationException(MixItUp.Base.Resources.FileIsNotInCorrectFormat);
                                         }
                                     }
                                     else
                                     {
-                                        throw new InvalidOperationException("File is not in the correct format");
+                                        throw new InvalidOperationException(MixItUp.Base.Resources.FileIsNotInCorrectFormat);
                                     }
 
-                                    UserViewModel user = null;
+                                    UserV2ViewModel user = null;
                                     if (amount > 0)
                                     {
                                         if (id > 0)
                                         {
-                                            UserDataModel userData = await ChannelSession.Settings.GetUserDataByPlatformID(StreamingPlatformTypeEnum.Twitch, id.ToString());
-                                            if (userData != null)
-                                            {
-                                                user = new UserViewModel(userData);
-                                            }
-                                            else
-                                            {
-                                                UserModel twitchUser = await ChannelSession.TwitchUserConnection.GetNewAPIUserByID(id.ToString());
-                                                if (twitchUser != null)
-                                                {
-                                                    user = await UserViewModel.Create(twitchUser);
-                                                }
-                                            }
+                                            user = await ServiceManager.Get<UserService>().GetUserByPlatformID(StreamingPlatformTypeEnum.Twitch, id.ToString(), performPlatformSearch: true);
                                         }
                                         else if (!string.IsNullOrEmpty(username))
                                         {
-                                            UserModel twitchUser = await ChannelSession.TwitchUserConnection.GetNewAPIUserByLogin(username);
-                                            if (twitchUser != null)
-                                            {
-                                                user = await UserViewModel.Create(twitchUser);
-                                            }
+                                            user = await ServiceManager.Get<UserService>().GetUserByPlatformUsername(StreamingPlatformTypeEnum.Twitch, username, performPlatformSearch: true);
                                         }
                                     }
 
                                     if (user != null)
                                     {
-                                        if (!this.userImportData.ContainsKey(user.ID))
-                                        {
-                                            this.userImportData[user.ID] = amount;
-                                        }
-                                        this.userImportData[user.ID] = Math.Max(this.userImportData[user.ID], amount);
+                                        this.Currency.SetAmount(user, amount);
+                                        ChannelSession.Settings.Users.ManualValueChanged(user.ID);
+
                                         this.ImportFromFileText = string.Format("{0} {1}...", this.userImportData.Count(), MixItUp.Base.Resources.Imported);
-                                    }
-                                }
-
-                                await ChannelSession.Settings.LoadAllUserData();
-
-                                foreach (var kvp in this.userImportData)
-                                {
-                                    if (ChannelSession.Settings.UserData.ContainsKey(kvp.Key))
-                                    {
-                                        MixItUp.Base.Model.User.UserDataModel userData = ChannelSession.Settings.UserData[kvp.Key];
-                                        this.Currency.SetAmount(userData, kvp.Value);
                                     }
                                 }
 
@@ -662,10 +580,7 @@ namespace MixItUp.Base.ViewModel.Currency
                         Logger.Log(ex);
                     }
 
-                    await DialogHelper.ShowMessage(Resources.CurrencyImportFailed +
-                        Environment.NewLine + Environment.NewLine + "<USERNAME> <AMOUNT>" +
-                        Environment.NewLine + Environment.NewLine + "<USER ID> <AMOUNT>" +
-                        Environment.NewLine + Environment.NewLine + "<USER ID> <USERNAME> <AMOUNT>");
+                    await DialogHelper.ShowMessage(Resources.CurrencyImportFailed);
 
                     this.ImportFromFileText = MixItUp.Base.Resources.ImportFromFile;
                 }
@@ -673,23 +588,32 @@ namespace MixItUp.Base.ViewModel.Currency
 
             this.ExportToFileCommand = this.CreateCommand(async () =>
             {
-                await ChannelSession.Settings.LoadAllUserData();
+                await ServiceManager.Get<UserService>().LoadAllUserData();
 
-                string filePath = ChannelSession.Services.FileService.ShowSaveFileDialog(this.Currency.Name + " Data.txt");
+                string filePath = ServiceManager.Get<IFileService>().ShowSaveFileDialog(this.Currency.Name + " Data.txt", MixItUp.Base.Resources.TextFileFormatFilter);
                 if (!string.IsNullOrEmpty(filePath))
                 {
                     StringBuilder fileContents = new StringBuilder();
-                    foreach (MixItUp.Base.Model.User.UserDataModel userData in ChannelSession.Settings.UserData.Values.ToList())
+                    foreach (UserV2Model userData in ChannelSession.Settings.Users.Values.ToList())
                     {
-                        fileContents.AppendLine(string.Format("{0} {1} {2}", userData.TwitchID, userData.Username, this.Currency.GetAmount(userData)));
+                        UserV2ViewModel user = new UserV2ViewModel(userData);
+
+                        fileContents.AppendLine(string.Format("{0} {1} {2} {3} {4}", user.ID, user.Platform, user.PlatformID, user.Username, this.Currency.GetAmount(user)));
                     }
-                    await ChannelSession.Services.FileService.SaveFile(filePath, fileContents.ToString());
+                    await ServiceManager.Get<IFileService>().SaveFile(filePath, fileContents.ToString());
                 }
             });
 
             this.HelpCommand = this.CreateCommand(() =>
             {
-                ProcessHelper.LaunchLink("https://github.com/SaviorXTanren/mixer-mixitup/wiki/Currency,-Rank,-&-Inventory");
+                if (this.IsRank)
+                {
+                    ProcessHelper.LaunchLink("https://wiki.mixitupapp.com/consumables/rank");
+                }
+                else
+                {
+                    ProcessHelper.LaunchLink("https://wiki.mixitupapp.com/consumables/currency");
+                }
             });
         }
 
@@ -749,18 +673,6 @@ namespace MixItUp.Base.ViewModel.Currency
             if (this.OnlineRateAmount > 0 && this.OnlineRateInterval == 0)
             {
                 await DialogHelper.ShowMessage(Resources.OnlineRateVsInterval1);
-                return false;
-            }
-
-            if (this.OfflineRateAmount < 0 || this.OfflineRateInterval < 0)
-            {
-                await DialogHelper.ShowMessage(Resources.OnlineRateVsInterval2);
-                return false;
-            }
-
-            if (this.OfflineRateAmount > 0 && this.OfflineRateInterval == 0)
-            {
-                await DialogHelper.ShowMessage(Resources.OfflineRateVsInterval);
                 return false;
             }
 
@@ -832,8 +744,6 @@ namespace MixItUp.Base.ViewModel.Currency
 
             this.Currency.AcquireAmount = this.OnlineRateAmount;
             this.Currency.AcquireInterval = this.OnlineRateInterval;
-            this.Currency.OfflineAcquireAmount = this.OfflineRateAmount;
-            this.Currency.OfflineAcquireInterval = this.OfflineRateInterval;
 
             this.Currency.SpecialTracking = CurrencySpecialTrackingEnum.None;
             if (this.OnlineRate == CurrencyAcquireRateTypeEnum.Bits) { this.Currency.SpecialTracking = CurrencySpecialTrackingEnum.Bits; }
@@ -872,57 +782,57 @@ namespace MixItUp.Base.ViewModel.Currency
             List<NewAutoChatCommandModel> commandsToAdd = new List<NewAutoChatCommandModel>();
             if (this.Currency != null)
             {
-                ChatCommandModel statusCommand = new ChatCommandModel("User " + this.Currency.Name, new HashSet<string>() { this.Currency.SpecialIdentifier });
+                ChatCommandModel statusCommand = new ChatCommandModel($"{MixItUp.Base.Resources.User} {this.Currency.Name}", new HashSet<string>() { this.Currency.SpecialIdentifier });
                 statusCommand.Requirements.AddBasicRequirements();
-                statusCommand.Requirements.Role.Role = UserRoleEnum.User;
+                statusCommand.Requirements.Role.UserRole = UserRoleEnum.User;
                 statusCommand.Requirements.Cooldown.Type = CooldownTypeEnum.Standard;
                 statusCommand.Requirements.Cooldown.IndividualAmount = 5;
 
                 string statusChatText = string.Empty;
                 if (this.Currency.IsRank)
                 {
-                    statusChatText = string.Format("@$username is a ${0} with ${1} {2}!", this.Currency.UserRankNameSpecialIdentifier, this.Currency.UserAmountSpecialIdentifier, this.Currency.Name);
+                    statusChatText = string.Format(MixItUp.Base.Resources.ConsumablesCurrencyCommandDefault, this.Currency.UserRankNameSpecialIdentifier, this.Currency.UserAmountSpecialIdentifier, this.Currency.Name);
                 }
                 else
                 {
-                    statusChatText = string.Format("@$username has ${0} {1}!", this.Currency.UserAmountSpecialIdentifier, this.Currency.Name);
+                    statusChatText = string.Format(MixItUp.Base.Resources.ConsumablesCurrencyCommandDefault, this.Currency.UserAmountSpecialIdentifier, this.Currency.Name);
                 }
                 statusCommand.Actions.Add(new ChatActionModel(statusChatText));
-                commandsToAdd.Add(new NewAutoChatCommandModel(string.Format("!{0} - {1}", statusCommand.Triggers.First(), "Shows User's Amount"), statusCommand));
+                commandsToAdd.Add(new NewAutoChatCommandModel(string.Format("!{0} - {1}", statusCommand.Triggers.First(), MixItUp.Base.Resources.ShowsUsersAmount), statusCommand));
 
                 if (this.Currency.SpecialTracking == CurrencySpecialTrackingEnum.None)
                 {
-                    ChatCommandModel addCommand = new ChatCommandModel("Add " + this.Currency.Name, new HashSet<string>() { "add" + this.Currency.SpecialIdentifier });
+                    ChatCommandModel addCommand = new ChatCommandModel($"{MixItUp.Base.Resources.Add} {this.Currency.Name}", new HashSet<string>() { MixItUp.Base.Resources.Add.ToLower() + this.Currency.SpecialIdentifier });
                     addCommand.Requirements.AddBasicRequirements();
-                    addCommand.Requirements.Role.Role = UserRoleEnum.Mod;
+                    addCommand.Requirements.Role.UserRole = UserRoleEnum.Moderator;
                     addCommand.Requirements.Cooldown.Type = CooldownTypeEnum.Standard;
                     addCommand.Requirements.Cooldown.IndividualAmount = 5;
 
                     addCommand.Actions.Add(new ConsumablesActionModel(this.Currency, ConsumablesActionTypeEnum.AddToSpecificUser, usersMustBePresent: true, "$arg2text", username: "$targetusername"));
-                    addCommand.Actions.Add(new ChatActionModel(string.Format("@$targetusername received $arg2text {0}!", this.Currency.Name)));
-                    commandsToAdd.Add(new NewAutoChatCommandModel(string.Format("!{0} - {1}", addCommand.Triggers.First(), "Adds Amount To Specified User"), addCommand));
+                    addCommand.Actions.Add(new ChatActionModel(string.Format(MixItUp.Base.Resources.ConsumablesCurrencyRankAddCommandDefault, this.Currency.Name)));
+                    commandsToAdd.Add(new NewAutoChatCommandModel(string.Format("!{0} - {1}", addCommand.Triggers.First(), MixItUp.Base.Resources.AddsAmountToSpecifiedUser), addCommand));
 
-                    ChatCommandModel addAllCommand = new ChatCommandModel("Add All " + this.Currency.Name, new HashSet<string>() { "addall" + this.Currency.SpecialIdentifier });
+                    ChatCommandModel addAllCommand = new ChatCommandModel($"{MixItUp.Base.Resources.AddAll} {this.Currency.Name}", new HashSet<string>() { MixItUp.Base.Resources.AddAll.ToLower() + this.Currency.SpecialIdentifier });
                     addAllCommand.Requirements.AddBasicRequirements();
-                    addAllCommand.Requirements.Role.Role = UserRoleEnum.Mod;
+                    addAllCommand.Requirements.Role.UserRole = UserRoleEnum.Moderator;
                     addAllCommand.Requirements.Cooldown.Type = CooldownTypeEnum.Standard;
                     addAllCommand.Requirements.Cooldown.IndividualAmount = 5;
 
                     addAllCommand.Actions.Add(new ConsumablesActionModel(this.Currency, ConsumablesActionTypeEnum.AddToAllChatUsers, usersMustBePresent: true, "$arg1text"));
-                    addAllCommand.Actions.Add(new ChatActionModel(string.Format("Everyone got $arg1text {0}!", this.Currency.Name)));
-                    commandsToAdd.Add(new NewAutoChatCommandModel(string.Format("!{0} - {1}", addAllCommand.Triggers.First(), "Adds Amount To All Chat Users"), addAllCommand));
+                    addAllCommand.Actions.Add(new ChatActionModel(string.Format(MixItUp.Base.Resources.ConsumablesCurrencyRankAddAllCommandDefault, this.Currency.Name)));
+                    commandsToAdd.Add(new NewAutoChatCommandModel(string.Format("!{0} - {1}", addAllCommand.Triggers.First(), MixItUp.Base.Resources.AddsAmountToAllChatUsers), addAllCommand));
 
                     if (!this.Currency.IsRank)
                     {
-                        ChatCommandModel giveCommand = new ChatCommandModel("Give " + this.Currency.Name, new HashSet<string>() { "give" + this.Currency.SpecialIdentifier });
+                        ChatCommandModel giveCommand = new ChatCommandModel($"{MixItUp.Base.Resources.Give} {this.Currency.Name}", new HashSet<string>() { MixItUp.Base.Resources.Give.ToLower() + this.Currency.SpecialIdentifier });
                         giveCommand.Requirements.AddBasicRequirements();
-                        giveCommand.Requirements.Role.Role = UserRoleEnum.User;
+                        giveCommand.Requirements.Role.UserRole = UserRoleEnum.User;
                         giveCommand.Requirements.Cooldown.Type = CooldownTypeEnum.Standard;
                         giveCommand.Requirements.Cooldown.IndividualAmount = 5;
 
                         giveCommand.Actions.Add(new ConsumablesActionModel(this.Currency, ConsumablesActionTypeEnum.AddToSpecificUser, usersMustBePresent: true, "$arg2text", username: "$targetusername", deductFromUser: true));
-                        giveCommand.Actions.Add(new ChatActionModel(string.Format("@$username gave @$targetusername $arg2text {0}!", this.Currency.Name)));
-                        commandsToAdd.Add(new NewAutoChatCommandModel(string.Format("!{0} - {1}", giveCommand.Triggers.First(), "Gives Amount To Specified User"), giveCommand));
+                        giveCommand.Actions.Add(new ChatActionModel(string.Format(MixItUp.Base.Resources.ConsumablesCurrencyRankGiveCommandDefault, this.Currency.Name)));
+                        commandsToAdd.Add(new NewAutoChatCommandModel(string.Format("!{0} - {1}", giveCommand.Triggers.First(), MixItUp.Base.Resources.GivesAmountToSpecifiedUser), giveCommand));
                     }
                 }
             }

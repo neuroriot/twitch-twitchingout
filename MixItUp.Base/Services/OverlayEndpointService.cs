@@ -1,8 +1,7 @@
-﻿using MixItUp.Base.Model;
-using MixItUp.Base.Model.Commands;
+﻿using MixItUp.Base.Model.Commands;
 using MixItUp.Base.Model.Overlay;
+using MixItUp.Base.Services.External;
 using MixItUp.Base.Util;
-using MixItUp.Base.ViewModel.User;
 using Newtonsoft.Json.Linq;
 using StreamingClient.Base.Util;
 using StreamingClient.Base.Web;
@@ -32,33 +31,6 @@ namespace MixItUp.Base.Services
         public double Rate { get; set; }
     }
 
-    public interface IOverlayEndpointService
-    {
-        string Name { get; }
-        int Port { get; }
-
-        event EventHandler OnWebSocketConnectedOccurred;
-        event EventHandler<WebSocketCloseStatus> OnWebSocketDisconnectedOccurred;
-
-        Task<bool> Initialize();
-
-        Task Disconnect();
-
-        Task<int> TestConnection();
-
-        void StartBatching();
-
-        Task EndBatching();
-
-        Task ShowItem(OverlayItemModelBase item, CommandParametersModel parameters);
-        Task UpdateItem(OverlayItemModelBase item, CommandParametersModel parameters);
-        Task HideItem(OverlayItemModelBase item);
-
-        Task SendTextToSpeech(OverlayTextToSpeech textToSpeech);
-
-        void SetLocalFile(string fileID, string filePath);
-    }
-
     public class OverlayPacket : WebSocketPacket
     {
         public JObject data;
@@ -79,7 +51,7 @@ namespace MixItUp.Base.Services
         }
     }
 
-    public class OverlayEndpointService : IOverlayEndpointService
+    public class OverlayEndpointService
     {
         public const string RegularOverlayHttpListenerServerAddressFormat = "http://localhost:{0}/overlay/";
         public const string RegularOverlayWebSocketServerAddressFormat = "http://localhost:{0}/ws/";
@@ -109,42 +81,42 @@ namespace MixItUp.Base.Services
             this.Name = name;
             this.Port = port;
 
-            this.httpListenerServer = new OverlayHttpListenerServer(this.HttpListenerServerAddress);
-            this.webSocketServer = new OverlayWebSocketHttpListenerServer(this.WebSocketServerAddress);
+            this.httpListenerServer = new OverlayHttpListenerServer();
+            this.webSocketServer = new OverlayWebSocketHttpListenerServer();
         }
 
         public async Task<bool> Initialize()
         {
             try
             {
-                this.httpListenerServer.Start();
-                if (this.webSocketServer.Start())
+                this.httpListenerServer.Start(this.HttpListenerServerAddress);
+                if (this.webSocketServer.Start(this.WebSocketServerAddress))
                 {
                     this.webSocketServer.OnConnectedOccurred += WebSocketServer_OnConnectedOccurred;
                     this.webSocketServer.OnDisconnectOccurred += WebSocketServer_OnDisconnectOccurred;
 
-                    if (this.Name.Equals(ChannelSession.Services.Overlay.DefaultOverlayName) && !string.IsNullOrWhiteSpace(ChannelSession.Settings.OverlaySourceName))
+                    if (this.Name.Equals(ServiceManager.Get<OverlayService>().DefaultOverlayName) && !string.IsNullOrWhiteSpace(ChannelSession.Settings.OverlaySourceName))
                     {
                         string overlayServerAddress = string.Format(OverlayEndpointService.RegularOverlayHttpListenerServerAddressFormat, this.Port);
-                        if (ChannelSession.Services.OBSStudio.IsConnected)
+                        if (ServiceManager.Get<IOBSStudioService>().IsConnected)
                         {
-                            await ChannelSession.Services.OBSStudio.SetSourceVisibility(null, ChannelSession.Settings.OverlaySourceName, visibility: false);
-                            await ChannelSession.Services.OBSStudio.SetWebBrowserSourceURL(null, ChannelSession.Settings.OverlaySourceName, overlayServerAddress);
-                            await ChannelSession.Services.OBSStudio.SetSourceVisibility(null, ChannelSession.Settings.OverlaySourceName, visibility: true);
+                            await ServiceManager.Get<IOBSStudioService>().SetSourceVisibility(null, ChannelSession.Settings.OverlaySourceName, visibility: false);
+                            await ServiceManager.Get<IOBSStudioService>().SetWebBrowserSourceURL(null, ChannelSession.Settings.OverlaySourceName, overlayServerAddress);
+                            await ServiceManager.Get<IOBSStudioService>().SetSourceVisibility(null, ChannelSession.Settings.OverlaySourceName, visibility: true);
                         }
 
-                        if (ChannelSession.Services.XSplit.IsConnected)
+                        if (ServiceManager.Get<XSplitService>().IsConnected)
                         {
-                            await ChannelSession.Services.XSplit.SetSourceVisibility(null, ChannelSession.Settings.OverlaySourceName, visibility: false);
-                            await ChannelSession.Services.XSplit.SetWebBrowserSourceURL(null, ChannelSession.Settings.OverlaySourceName, overlayServerAddress);
-                            await ChannelSession.Services.XSplit.SetSourceVisibility(null, ChannelSession.Settings.OverlaySourceName, visibility: true);
+                            await ServiceManager.Get<XSplitService>().SetSourceVisibility(null, ChannelSession.Settings.OverlaySourceName, visibility: false);
+                            await ServiceManager.Get<XSplitService>().SetWebBrowserSourceURL(null, ChannelSession.Settings.OverlaySourceName, overlayServerAddress);
+                            await ServiceManager.Get<XSplitService>().SetSourceVisibility(null, ChannelSession.Settings.OverlaySourceName, visibility: true);
                         }
 
-                        if (ChannelSession.Services.StreamlabsOBS.IsConnected)
+                        if (ServiceManager.Get<StreamlabsOBSService>().IsConnected)
                         {
-                            await ChannelSession.Services.StreamlabsOBS.SetSourceVisibility(null, ChannelSession.Settings.OverlaySourceName, visibility: false);
-                            await ChannelSession.Services.StreamlabsOBS.SetWebBrowserSourceURL(null, ChannelSession.Settings.OverlaySourceName, overlayServerAddress);
-                            await ChannelSession.Services.StreamlabsOBS.SetSourceVisibility(null, ChannelSession.Settings.OverlaySourceName, visibility: true);
+                            await ServiceManager.Get<StreamlabsOBSService>().SetSourceVisibility(null, ChannelSession.Settings.OverlaySourceName, visibility: false);
+                            await ServiceManager.Get<StreamlabsOBSService>().SetWebBrowserSourceURL(null, ChannelSession.Settings.OverlaySourceName, overlayServerAddress);
+                            await ServiceManager.Get<StreamlabsOBSService>().SetSourceVisibility(null, ChannelSession.Settings.OverlaySourceName, visibility: true);
                         }
                     }
                     return true;
@@ -191,8 +163,14 @@ namespace MixItUp.Base.Services
                     {
                         if (item is OverlayImageItemModel || item is OverlayVideoItemModel || item is OverlaySoundItemModel)
                         {
-                            this.SetLocalFile(jobj["FileID"].ToString(), jobj["FilePath"].ToString());
-                            jobj["FullLink"] = OverlayItemModelBase.GetFileFullLink(jobj["FileID"].ToString(), jobj["FileType"].ToString(), jobj["FilePath"].ToString());
+                            string filepath = jobj["FilePath"].ToString();
+                            if (!ServiceManager.Get<IFileService>().IsURLPath(filepath) && !ServiceManager.Get<IFileService>().FileExists(filepath))
+                            {
+                                Logger.Log(LogLevel.Error, $"Overlay Action - File does not exist: {filepath}");
+                            }
+
+                            this.SetLocalFile(jobj["FileID"].ToString(), filepath);
+                            jobj["FullLink"] = OverlayItemModelBase.GetFileFullLink(jobj["FileID"].ToString(), jobj["FileType"].ToString(), filepath);
                         }
                         await this.SendPacket("Show", jobj);
                     }
@@ -278,8 +256,7 @@ namespace MixItUp.Base.Services
 
         private Dictionary<string, string> localFiles = new Dictionary<string, string>();
 
-        public OverlayHttpListenerServer(string address)
-            : base(address)
+        public OverlayHttpListenerServer()
         {
             this.webPageInstance = File.ReadAllText(OverlayWebpageFilePath);
 
@@ -289,7 +266,7 @@ namespace MixItUp.Base.Services
 
         public void SetLocalFile(string id, string filepath)
         {
-            if (!Uri.IsWellFormedUriString(filepath, UriKind.RelativeOrAbsolute))
+            if (!ServiceManager.Get<IFileService>().IsURLPath(filepath))
             {
                 this.localFiles[id] = filepath;
             }
@@ -320,9 +297,52 @@ namespace MixItUp.Base.Services
                             listenerContext.Response.StatusCode = (int)HttpStatusCode.OK;
                             listenerContext.Response.StatusDescription = HttpStatusCode.OK.ToString();
                             listenerContext.Response.ContentType = fileType + "/" + Path.GetExtension(this.localFiles[fileID]).Replace(".", "");
+                            listenerContext.Response.Headers["Accept-Ranges"] = "bytes";
 
-                            byte[] fileData = File.ReadAllBytes(this.localFiles[fileID]);
-                            await listenerContext.Response.OutputStream.WriteAsync(fileData, 0, fileData.Length);
+                            // If they overlay requests a range, let's chunk this file
+                            string range = listenerContext.Request.Headers["Range"];
+                            if (range != null)
+                            {
+                                // The total file size
+                                long filesize = new FileInfo(this.localFiles[fileID]).Length;
+
+                                // Format is: bytes=0-123
+                                //  0  : start byte
+                                //  123: end byte (can be empty, means to give me what you want)
+                                range = range.Replace("bytes=", string.Empty);
+                                string[] markers = range.Split('-');
+                                long startByte = long.Parse(markers[0]);
+                                // Max of 1MB past startByte
+                                long endByte = Math.Min(filesize, startByte + 1024 * 1024);
+                                if (markers.Length > 1 && !string.IsNullOrEmpty(markers[1]))
+                                {
+                                    // If they requested less bytes, then provide less instead
+                                    endByte = Math.Min(long.Parse(markers[1]), endByte);
+                                }
+
+                                int byteRange = (int)(endByte - startByte);
+
+                                // Write out necessary headers
+                                listenerContext.Response.Headers["Content-Range"] = $"bytes {startByte}-{endByte - 1}/{filesize}";
+                                listenerContext.Response.StatusCode = (int)HttpStatusCode.PartialContent;
+                                listenerContext.Response.StatusDescription = HttpStatusCode.PartialContent.ToString();
+                                listenerContext.Response.ContentLength64 = byteRange;
+
+                                // Only read/write the range of bytes requested
+                                byte[] fileData = new byte[byteRange];
+                                using (BinaryReader reader = new BinaryReader(new FileStream(this.localFiles[fileID], FileMode.Open)))
+                                {
+                                    reader.BaseStream.Seek(startByte, SeekOrigin.Begin);
+                                    reader.Read(fileData, 0, byteRange);
+                                }
+                                await listenerContext.Response.OutputStream.WriteAsync(fileData, 0, fileData.Length);
+                            }
+                            else
+                            {
+                                byte[] fileData = File.ReadAllBytes(this.localFiles[fileID]);
+                                listenerContext.Response.ContentLength64 = fileData.Length;
+                                await listenerContext.Response.OutputStream.WriteAsync(fileData, 0, fileData.Length);
+                            }
                         }
                     }
                 }
@@ -338,7 +358,7 @@ namespace MixItUp.Base.Services
 
     public class OverlayWebSocketHttpListenerServer : WebSocketHttpListenerServerBase
     {
-        public OverlayWebSocketHttpListenerServer(string address) : base(address) { }
+        public OverlayWebSocketHttpListenerServer() { }
 
         protected override WebSocketServerBase CreateWebSocketServer(HttpListenerContext listenerContext)
         {

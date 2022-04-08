@@ -1,7 +1,11 @@
-﻿using MixItUp.Base.Util;
+﻿using MixItUp.Base.Model;
+using MixItUp.Base.Services;
+using MixItUp.Base.Services.Glimesh;
+using MixItUp.Base.Services.Trovo;
+using MixItUp.Base.Services.Twitch;
+using MixItUp.Base.Util;
 using MixItUp.Base.ViewModel.Chat;
 using MixItUp.Base.ViewModel.User;
-using MixItUp.Base.ViewModel;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -11,13 +15,13 @@ namespace MixItUp.Base.ViewModel.MainControls
 {
     public class ChatMainControlViewModel : ChatListControlViewModel
     {
-        public IEnumerable<UserViewModel> DisplayUsers { get; private set; }
+        public IEnumerable<UserV2ViewModel> DisplayUsers { get; private set; }
 
         public bool ShowViewerAndChatterNumbers { get { return !ChannelSession.Settings.HideViewerAndChatterNumbers; } }
 
         public bool ShowChatUserList { get { return !ChannelSession.Settings.HideChatUserList; } }
 
-        public long ViewersCount
+        public int ViewersCount
         {
             get { return this.viewersCount; }
             set
@@ -26,9 +30,9 @@ namespace MixItUp.Base.ViewModel.MainControls
                 this.NotifyPropertyChanged();
             }
         }
-        private long viewersCount;
+        private int viewersCount;
 
-        public long ChattersCount
+        public int ChattersCount
         {
             get { return this.chattersCount; }
             set
@@ -37,21 +41,41 @@ namespace MixItUp.Base.ViewModel.MainControls
                 this.NotifyPropertyChanged();
             }
         }
-        private long chattersCount;
-
-        public string EnableDisableButtonText
-        {
-            get { return this.enableDisableButtonText; }
-            set
-            {
-                this.enableDisableButtonText = value;
-                this.NotifyPropertyChanged();
-            }
-        }
-        private string enableDisableButtonText = MixItUp.Base.Resources.DisableChat;
+        private int chattersCount;
 
         public ICommand ClearChatCommand { get; private set; }
+
+        public string EnableDisableChatButtonText
+        {
+            get
+            {
+                if (ServiceManager.Get<ChatService>().DisableChat)
+                {
+                    return MixItUp.Base.Resources.EnableChat;
+                }
+                else
+                {
+                    return MixItUp.Base.Resources.DisableChat;
+                }
+            }
+        }
         public ICommand EnableDisableChatCommand { get; private set; }
+
+        public string PauseUnpauseCommandsButtonText
+        {
+            get
+            {
+                if (ServiceManager.Get<CommandService>().IsPaused)
+                {
+                    return MixItUp.Base.Resources.UnpauseCommands;
+                }
+                else
+                {
+                    return MixItUp.Base.Resources.PauseCommands;
+                }
+            }
+        }
+        public ICommand PauseUnpauseCommandsCommand { get; private set; }
 
         public ChatMainControlViewModel(MainWindowViewModel windowViewModel)
             : base(windowViewModel)
@@ -60,35 +84,48 @@ namespace MixItUp.Base.ViewModel.MainControls
             {
                 if (await DialogHelper.ShowConfirmation(MixItUp.Base.Resources.ClearChatConfirmation))
                 {
-                    await ChannelSession.Services.Chat.ClearMessages();
+                    await ServiceManager.Get<ChatService>().ClearMessages(StreamingPlatformTypeEnum.All);
                 }
             });
 
             this.EnableDisableChatCommand = this.CreateCommand(async () =>
             {
-                if (!ChannelSession.Services.Chat.DisableChat && !await DialogHelper.ShowConfirmation(MixItUp.Base.Resources.DisableChatConfirmation))
+                if (!ServiceManager.Get<ChatService>().DisableChat && !await DialogHelper.ShowConfirmation(MixItUp.Base.Resources.DisableChatConfirmation))
                 {
                     return;
                 }
 
-                ChannelSession.Services.Chat.DisableChat = !ChannelSession.Services.Chat.DisableChat;
-                if (ChannelSession.Services.Chat.DisableChat)
+                ServiceManager.Get<ChatService>().DisableChat = !ServiceManager.Get<ChatService>().DisableChat;
+
+                this.NotifyPropertyChanged("EnableDisableChatButtonText");
+            });
+
+            this.PauseUnpauseCommandsCommand = this.CreateCommand(async () =>
+            {
+                if (!ServiceManager.Get<CommandService>().IsPaused && !await DialogHelper.ShowConfirmation(MixItUp.Base.Resources.PauseCommandsConfirmation))
                 {
-                    this.EnableDisableButtonText = MixItUp.Base.Resources.EnableChat;
+                    return;
+                }
+
+                if (ServiceManager.Get<CommandService>().IsPaused)
+                {
+                    await ServiceManager.Get<CommandService>().Unpause();
                 }
                 else
                 {
-                    this.EnableDisableButtonText = MixItUp.Base.Resources.DisableChat;
+                    await ServiceManager.Get<CommandService>().Pause();
                 }
+
+                this.NotifyPropertyChanged("PauseUnpauseCommandsButtonText");
             });
         }
 
-        protected override async Task OnLoadedInternal()
+        protected override async Task OnOpenInternal()
         {
-            await base.OnLoadedInternal();
+            await base.OnOpenInternal();
 
-            ChannelSession.Services.Chat.DisplayUsersUpdated += ChatService_DisplayUsersUpdated;
-            this.DisplayUsers = ChannelSession.Services.Chat.DisplayUsers;
+            ServiceManager.Get<UserService>().DisplayUsersUpdated += ChatService_DisplayUsersUpdated;
+            this.DisplayUsers = ServiceManager.Get<UserService>().DisplayUsers;
 
             this.Messages.CollectionChanged += Messages_CollectionChanged;
 
@@ -101,6 +138,8 @@ namespace MixItUp.Base.ViewModel.MainControls
 
             this.NotifyPropertyChanged("ShowViewerAndChatterNumbers");
             this.NotifyPropertyChanged("ShowChatUserList");
+            this.NotifyPropertyChanged("EnableDisableChatButtonText");
+            this.NotifyPropertyChanged("PauseUnpauseCommandsButtonText");
         }
 
         private void Messages_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
@@ -110,16 +149,27 @@ namespace MixItUp.Base.ViewModel.MainControls
 
         private void RefreshNumbers()
         {
-            if (ChannelSession.TwitchStreamNewAPI != null)
+            int viewerCount = 0;
+            if (ServiceManager.Get<TwitchSessionService>().IsConnected && ServiceManager.Get<TwitchSessionService>().IsLive)
             {
-                this.ViewersCount = ChannelSession.TwitchStreamNewAPI.viewer_count;
+                viewerCount += (int)ServiceManager.Get<TwitchSessionService>().Stream?.viewer_count;
             }
-            this.ChattersCount = ChannelSession.Services.Chat.AllUsers.Count;
+            if (ServiceManager.Get<TrovoSessionService>().IsConnected && ServiceManager.Get<TrovoSessionService>().IsLive)
+            {
+                viewerCount += (int)ServiceManager.Get<TrovoSessionService>().Channel?.current_viewers;
+            }
+            if (ServiceManager.Get<GlimeshSessionService>().IsConnected && ServiceManager.Get<GlimeshSessionService>().IsLive)
+            {
+                viewerCount += ServiceManager.Get<GlimeshSessionService>().User?.channel?.stream?.countViewers ?? 0;
+            }
+            this.ViewersCount = viewerCount;
+
+            this.ChattersCount = ServiceManager.Get<UserService>().ActiveUserCount;
         }
 
         private void ChatService_DisplayUsersUpdated(object sender, EventArgs e)
         {
-            this.DisplayUsers = ChannelSession.Services.Chat.DisplayUsers;
+            this.DisplayUsers = ServiceManager.Get<UserService>().DisplayUsers;
             this.NotifyPropertyChanged("DisplayUsers");
         }
     }

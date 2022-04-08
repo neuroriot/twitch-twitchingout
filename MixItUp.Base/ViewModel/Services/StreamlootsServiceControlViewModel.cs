@@ -1,4 +1,5 @@
-﻿using MixItUp.Base.Services.External;
+﻿using MixItUp.Base.Services;
+using MixItUp.Base.Services.External;
 using MixItUp.Base.Util;
 using StreamingClient.Base.Model.OAuth;
 using System.Windows.Input;
@@ -23,6 +24,8 @@ namespace MixItUp.Base.ViewModel.Services
         public ICommand LogInCommand { get; set; }
         public ICommand LogOutCommand { get; set; }
 
+        public override string WikiPageName { get { return "streamloots"; } }
+
         public StreamlootsServiceControlViewModel()
             : base(Resources.Streamloots)
         {
@@ -36,7 +39,7 @@ namespace MixItUp.Base.ViewModel.Services
                 {
                     string streamlootsID = this.StreamlootsURL.Replace(StreamlootsStreamURLFormat, "");
 
-                    Result result = await ChannelSession.Services.Streamloots.Connect(new OAuthTokenModel() { accessToken = streamlootsID });
+                    Result result = await ServiceManager.Get<StreamlootsService>().Connect(new OAuthTokenModel() { accessToken = streamlootsID });
                     if (result.Success)
                     {
                         this.IsConnected = true;
@@ -50,14 +53,14 @@ namespace MixItUp.Base.ViewModel.Services
 
             this.LogOutCommand = this.CreateCommand(async () =>
             {
-                await ChannelSession.Services.Streamloots.Disconnect();
+                await ServiceManager.Get<StreamlootsService>().Disconnect();
 
                 ChannelSession.Settings.StreamlootsOAuthToken = null;
 
                 this.IsConnected = false;
             });
 
-            this.IsConnected = ChannelSession.Services.Streamloots.IsConnected;
+            this.IsConnected = ServiceManager.Get<StreamlootsService>().IsConnected;
         }
     }
 }

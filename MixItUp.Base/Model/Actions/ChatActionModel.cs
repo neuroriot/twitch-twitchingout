@@ -1,4 +1,6 @@
 ﻿using MixItUp.Base.Model.Commands;
+using MixItUp.Base.Services;
+using System;
 using System.Runtime.Serialization;
 using System.Threading.Tasks;
 
@@ -27,18 +29,8 @@ namespace MixItUp.Base.Model.Actions
             this.WhisperUserName = whisperUserName;
         }
 
-#pragma warning disable CS0612 // Type or member is obsolete
-        internal ChatActionModel(MixItUp.Base.Actions.ChatAction action)
-            : base(ActionTypeEnum.Chat)
-        {
-            this.ChatText = action.ChatText;
-            this.SendAsStreamer = action.SendAsStreamer;
-            this.IsWhisper = action.IsWhisper;
-            this.WhisperUserName = action.WhisperUserName;
-        }
-#pragma warning restore CS0612 // Type or member is obsolete
-
-        private ChatActionModel() { }
+        [Obsolete]
+        public ChatActionModel() { }
 
         protected override async Task PerformInternal(CommandParametersModel parameters)
         {
@@ -50,12 +42,12 @@ namespace MixItUp.Base.Model.Actions
                 {
                     whisperUserName = await ReplaceStringWithSpecialModifiers(this.WhisperUserName, parameters);
                 }
-                await ChannelSession.Services.Chat.Whisper(parameters.Platform, whisperUserName, message, this.SendAsStreamer);
+                await ServiceManager.Get<ChatService>().Whisper(whisperUserName, parameters.Platform, message, this.SendAsStreamer);
             }
             else
             {
                 string replyMessageID = ChannelSession.Settings.TwitchReplyToCommandChatMessages ? parameters.TriggeringChatMessageID : null;
-                await ChannelSession.Services.Chat.SendMessage(message, this.SendAsStreamer, platform: StreamingPlatformTypeEnum.All, replyMessageID: replyMessageID);
+                await ServiceManager.Get<ChatService>().SendMessage(message, parameters.Platform, this.SendAsStreamer, replyMessageID: replyMessageID);
             }
         }
     }

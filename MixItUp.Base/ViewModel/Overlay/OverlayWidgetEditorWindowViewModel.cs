@@ -1,4 +1,5 @@
 ﻿using MixItUp.Base.Model.Overlay;
+using MixItUp.Base.Services;
 using MixItUp.Base.Util;
 using MixItUp.Base.ViewModels;
 using System;
@@ -67,14 +68,14 @@ namespace MixItUp.Base.ViewModel.Overlay
             get { return this.selectedOverlayEndpoint; }
             set
             {
-                var overlays = ChannelSession.Services.Overlay.GetOverlayNames();
+                var overlays = ServiceManager.Get<OverlayService>().GetOverlayNames();
                 if (overlays.Contains(value))
                 {
                     this.selectedOverlayEndpoint = value;
                 }
                 else
                 {
-                    this.selectedOverlayEndpoint = ChannelSession.Services.Overlay.DefaultOverlayName;
+                    this.selectedOverlayEndpoint = ServiceManager.Get<OverlayService>().DefaultOverlayName;
                 }
                 this.NotifyPropertyChanged();
             }
@@ -171,8 +172,8 @@ namespace MixItUp.Base.ViewModel.Overlay
 
         private void Initialize()
         {
-            this.OverlayEndpoints.AddRange(ChannelSession.Services.Overlay.GetOverlayNames());
-            this.SelectedOverlayEndpoint = ChannelSession.Services.Overlay.DefaultOverlayName;
+            this.OverlayEndpoints.AddRange(ServiceManager.Get<OverlayService>().GetOverlayNames());
+            this.SelectedOverlayEndpoint = ServiceManager.Get<OverlayService>().DefaultOverlayName;
         }
     }
 }

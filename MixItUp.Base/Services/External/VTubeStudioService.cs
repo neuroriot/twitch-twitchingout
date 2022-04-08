@@ -31,6 +31,14 @@ namespace MixItUp.Base.Services.External
         public string type { get; set; }
         public string file { get; set; }
         public string hotkeyID { get; set; }
+
+        public string DisplayName
+        {
+            get
+            {
+                return !string.IsNullOrEmpty(this.name) ? this.name : this.file;
+            }
+        }
     }
 
     public class VTubeStudioWebSocketRequestPacket
@@ -110,13 +118,15 @@ namespace MixItUp.Base.Services.External
             {
                 Logger.Log(ex);
             }
-            return Task.FromResult(0);
+            return Task.CompletedTask;
         }
     }
 
     public class VTubeStudioService : OAuthExternalServiceBase
     {
-        private const string websocketAddress = "ws://localhost:8001";
+        public const int DefaultPortNumber = 8001;
+
+        private const string websocketAddress = "ws://localhost:";
 
         private const string websocketPluginName = "Mix It Up";
         private const string websocketPluginDeveloper = "https://mixitupapp.com/";
@@ -330,12 +340,12 @@ namespace MixItUp.Base.Services.External
             return new Result(MixItUp.Base.Resources.VTubeStudioConnectionFailed);
         }
 
-        protected override Task RefreshOAuthToken() { return Task.FromResult(0); }
+        protected override Task RefreshOAuthToken() { return Task.CompletedTask; }
 
         private async Task<bool> ConnectWebSocket()
         {
             this.websocket.OnDisconnectOccurred -= Websocket_OnDisconnectOccurred;
-            return await this.websocket.Connect(websocketAddress);
+            return await this.websocket.Connect(websocketAddress + ChannelSession.Settings.VTubeStudioPortNumber);
         }
 
         private async void Websocket_OnDisconnectOccurred(object sender, System.Net.WebSockets.WebSocketCloseStatus e)

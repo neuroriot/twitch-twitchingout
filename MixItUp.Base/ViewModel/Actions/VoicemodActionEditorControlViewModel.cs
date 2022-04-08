@@ -1,4 +1,5 @@
 ﻿using MixItUp.Base.Model.Actions;
+using MixItUp.Base.Services;
 using MixItUp.Base.Services.External;
 using MixItUp.Base.Util;
 using StreamingClient.Base.Util;
@@ -13,7 +14,7 @@ namespace MixItUp.Base.ViewModel.Actions
     {
         public override ActionTypeEnum Type { get { return ActionTypeEnum.Voicemod; } }
 
-        public bool VoicemodConnected { get { return ChannelSession.Services.Voicemod.IsConnected; } }
+        public bool VoicemodConnected { get { return ServiceManager.Get<IVoicemodService>().IsConnected; } }
         public bool VoicemodNotConnected { get { return !this.VoicemodConnected; } }
 
         public IEnumerable<VoicemodActionTypeEnum> ActionTypes { get { return EnumHelper.GetEnumList<VoicemodActionTypeEnum>(); } }
@@ -33,7 +34,14 @@ namespace MixItUp.Base.ViewModel.Actions
         }
         private VoicemodActionTypeEnum selectedActionType;
 
-        public bool ShowStateGrid { get { return this.SelectedActionType == VoicemodActionTypeEnum.VoiceChangerOnOff || this.SelectedActionType == VoicemodActionTypeEnum.BeepSoundOnOff; } }
+        public bool ShowStateGrid
+        {
+            get
+            {
+                return this.SelectedActionType == VoicemodActionTypeEnum.VoiceChangerOnOff || this.SelectedActionType == VoicemodActionTypeEnum.BeepSoundOnOff ||
+                    this.SelectedActionType == VoicemodActionTypeEnum.HearMyselfOnOff;
+            }
+        }
 
         public bool State
         {
@@ -169,14 +177,18 @@ namespace MixItUp.Base.ViewModel.Actions
             {
                 return Task.FromResult<ActionModelBase>(VoicemodActionModel.CreateForStopAllSounds());
             }
+            else if (this.SelectedActionType == VoicemodActionTypeEnum.HearMyselfOnOff)
+            {
+                return Task.FromResult<ActionModelBase>(VoicemodActionModel.CreateForHearMyselfOnOff(this.State));
+            }
             return Task.FromResult<ActionModelBase>(null);
         }
 
-        protected override async Task OnLoadedInternal()
+        protected override async Task OnOpenInternal()
         {
-            if (ChannelSession.Settings.EnableVoicemodStudio && !ChannelSession.Services.Voicemod.IsConnected)
+            if (ChannelSession.Settings.EnableVoicemodStudio && !ServiceManager.Get<IVoicemodService>().IsConnected)
             {
-                Result result = await ChannelSession.Services.Voicemod.Connect();
+                Result result = await ServiceManager.Get<IVoicemodService>().Connect();
                 if (!result.Success)
                 {
                     return;
@@ -185,7 +197,7 @@ namespace MixItUp.Base.ViewModel.Actions
 
             if (this.VoicemodConnected)
             {
-                foreach (VoicemodVoiceModel voice in (await ChannelSession.Services.Voicemod.GetVoices()).OrderBy(v => v.friendlyName))
+                foreach (VoicemodVoiceModel voice in (await ServiceManager.Get<IVoicemodService>().GetVoices()).OrderBy(v => v.friendlyName))
                 {
                     this.Voices.Add(voice);
                 }
@@ -195,7 +207,7 @@ namespace MixItUp.Base.ViewModel.Actions
                     this.SelectedVoice = this.Voices.FirstOrDefault(v => string.Equals(this.voiceID, v.voiceID));
                 }
 
-                foreach (VoicemodMemeModel sound in (await ChannelSession.Services.Voicemod.GetMemeSounds()).OrderBy(v => v.Name))
+                foreach (VoicemodMemeModel sound in (await ServiceManager.Get<IVoicemodService>().GetMemeSounds()).OrderBy(v => v.Name))
                 {
                     this.Sounds.Add(sound);
                 }
@@ -205,7 +217,7 @@ namespace MixItUp.Base.ViewModel.Actions
                     this.SelectedSound = this.Sounds.FirstOrDefault(v => string.Equals(this.soundFileName, v.FileName));
                 }
             }
-            await base.OnLoadedInternal();
+            await base.OnOpenInternal();
         }
     }
 }

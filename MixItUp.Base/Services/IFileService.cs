@@ -7,7 +7,7 @@ namespace MixItUp.Base.Services
     {
         string TextFileFilter();
         string ImageFileFilter();
-        string MusicFileFilter();
+        string SoundFileFilter();
         string VideoFileFilter();
         string HTMLFileFilter();
 
@@ -20,6 +20,7 @@ namespace MixItUp.Base.Services
         Task<IEnumerable<string>> GetFilesInDirectory(string directoryPath);
 
         bool FileExists(string filePath);
+        bool IsURLPath(string filePath);
         long GetFileSize(string filePath);
         Task<string> ReadFile(string filePath);
         Task<byte[]> ReadFileAsBytes(string filePath);

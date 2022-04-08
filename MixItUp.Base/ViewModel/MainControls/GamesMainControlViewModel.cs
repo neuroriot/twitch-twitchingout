@@ -1,5 +1,6 @@
 ﻿using MixItUp.Base.Model.Commands.Games;
 using MixItUp.Base.Model.Currency;
+using MixItUp.Base.Services;
 using MixItUp.Base.Util;
 using System.Linq;
 using System.Threading.Tasks;
@@ -29,11 +30,11 @@ namespace MixItUp.Base.ViewModel.MainControls
 
         public void Refresh()
         {
-            this.GameCommands.ClearAndAddRange(ChannelSession.Services.Command.GameCommands);
+            this.GameCommands.ClearAndAddRange(ServiceManager.Get<CommandService>().GameCommands);
             this.NotifyPropertyChanged("NoCurrenciesExist");
         }
 
-        protected override Task OnLoadedInternal()
+        protected override Task OnOpenInternal()
         {
             this.Refresh();
             return base.OnVisibleInternal();

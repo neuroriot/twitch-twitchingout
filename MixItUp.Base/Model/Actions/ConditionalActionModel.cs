@@ -1,4 +1,5 @@
 ﻿using MixItUp.Base.Model.Commands;
+using MixItUp.Base.Services;
 using StreamingClient.Base.Util;
 using System;
 using System.Collections.Generic;
@@ -89,30 +90,13 @@ namespace MixItUp.Base.Model.Actions
             this.Actions = new List<ActionModelBase>(actions);
         }
 
-#pragma warning disable CS0612 // Type or member is obsolete
-        internal ConditionalActionModel(MixItUp.Base.Actions.ConditionalAction action, ActionModelBase subAction)
-            : base(ActionTypeEnum.Conditional)
-        {
-            this.CaseSensitive = !action.IgnoreCase;
-            this.Operator = (ConditionalOperatorTypeEnum)(int)action.Operator;
-
-            foreach (var clause in action.Clauses)
-            {
-                this.Clauses.Add(new ConditionalClauseModel((ConditionalComparisionTypeEnum)(int)clause.ComparisionType, clause.Value1, clause.Value2, clause.Value3));
-            }
-
-            if (subAction != null)
-            {
-                this.Actions.Add(subAction);
-            }
-        }
-#pragma warning restore CS0612 // Type or member is obsolete
-
-        private ConditionalActionModel() { }
+        [Obsolete]
+        public ConditionalActionModel() { }
 
         protected override async Task PerformInternal(CommandParametersModel parameters)
         {
             bool finalResult = false;
+            int totalLoops = 0;
             do
             {
                 List<bool> results = new List<bool>();
@@ -137,7 +121,13 @@ namespace MixItUp.Base.Model.Actions
 
                 if (finalResult)
                 {
-                    await ChannelSession.Services.Command.RunDirectly(new CommandInstanceModel(this.Actions, parameters));
+                    await ServiceManager.Get<CommandService>().RunDirectly(new CommandInstanceModel(this.Actions, parameters));
+                }
+
+                totalLoops++;
+                if (totalLoops == 10)
+                {
+                    Logger.Log(LogLevel.Error, $"Command: {parameters.InitialCommandID} - Conditional Action - Repeated 10 times, possible endless loop");
                 }
             } while (this.RepeatWhileTrue && finalResult);
         }
@@ -146,6 +136,8 @@ namespace MixItUp.Base.Model.Actions
         {
             string v1 = await ReplaceStringWithSpecialModifiers(clause.Value1, parameters);
             string v2 = await ReplaceStringWithSpecialModifiers(clause.Value2, parameters);
+
+            Logger.Log(LogLevel.Debug, $"Conditional Action: Checking clause - {v1} {clause.ComparisionType} {v2}");
 
             if (clause.ComparisionType == ConditionalComparisionTypeEnum.Contains || clause.ComparisionType == ConditionalComparisionTypeEnum.DoesNotContain)
             {

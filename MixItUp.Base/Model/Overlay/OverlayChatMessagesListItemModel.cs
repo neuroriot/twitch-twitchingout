@@ -27,7 +27,7 @@ namespace MixItUp.Base.Model.Overlay
         </div>";
 
         private const string TextMessageHTMLTemplate = @"<span style=""font-family: '{TEXT_FONT}'; font-size: {TEXT_SIZE}px; font-weight: bold; word-wrap: break-word; color: {TEXT_COLOR}; vertical-align: middle; margin-left: 10px;"">{TEXT}</span>";
-        private const string ImageMessageHTMLTemplate = @"<img src=""{IMAGE}"" style=""vertical-align: middle; margin-left: 10px; max-height: 80px;""></img>";
+        private const string ImageMessageHTMLTemplate = @"<img src=""{IMAGE}"" style=""vertical-align: middle; margin-left: 10px; width: auto; height: {TEXT_SIZE}px;""></img>";
 
         public OverlayChatMessagesListItemModel() : base() { }
 
@@ -38,10 +38,10 @@ namespace MixItUp.Base.Model.Overlay
 
         public override Task LoadTestData()
         {
-            UserChatMessageViewModel message = new UserChatMessageViewModel(Guid.NewGuid().ToString(), StreamingPlatformTypeEnum.All, ChannelSession.GetCurrentUser());
+            UserChatMessageViewModel message = new UserChatMessageViewModel(Guid.NewGuid().ToString(), StreamingPlatformTypeEnum.None, ChannelSession.User);
             message.AddStringMessagePart("Test Message");
             this.GlobalEvents_OnChatMessageReceived(this, message);
-            return Task.FromResult(0);
+            return Task.CompletedTask;
         }
 
         public override async Task Enable()
@@ -101,16 +101,16 @@ namespace MixItUp.Base.Model.Overlay
                         }
                     }
 
-                    UserViewModel user = await item.GetUser();
+                    UserV2ViewModel user = await item.GetUser();
                     if (user != null)
                     {
                         item.TemplateReplacements.Add("MESSAGE", OverlayChatMessagesListItemModel.TextMessageHTMLTemplate);
                         item.TemplateReplacements.Add("TEXT", string.Join(" ", textParts));
-                        item.TemplateReplacements.Add("USERNAME", user.FullDisplayName);
+                        item.TemplateReplacements.Add("USERNAME", user.DisplayName);
                         item.TemplateReplacements.Add("USER_IMAGE", user.AvatarLink);
                         item.TemplateReplacements.Add("USER_COLOR", user.Color);
-                        item.TemplateReplacements.Add("SUB_IMAGE", user.SubscriberBadgeLink);
-                        item.TemplateReplacements.Add("USER_SUB_IMAGE", user.SubscriberBadgeLink);
+                        item.TemplateReplacements.Add("SUB_IMAGE", user.PlatformSubscriberBadgeLink);
+                        item.TemplateReplacements.Add("USER_SUB_IMAGE", user.PlatformSubscriberBadgeLink);
                         item.TemplateReplacements.Add("TEXT_SIZE", this.Height.ToString());
                     }
 
@@ -118,7 +118,7 @@ namespace MixItUp.Base.Model.Overlay
                     {
                         this.Items.Add(item);
                         this.SendUpdateRequired();
-                        return Task.FromResult(0);
+                        return Task.CompletedTask;
                     });
                 }
             }
@@ -131,7 +131,7 @@ namespace MixItUp.Base.Model.Overlay
                 OverlayListIndividualItemModel item = OverlayListIndividualItemModel.CreateRemoveItem(id.ToString());
                 this.Items.Add(item);
                 this.SendUpdateRequired();
-                return Task.FromResult(0);
+                return Task.CompletedTask;
             });
         }
     }

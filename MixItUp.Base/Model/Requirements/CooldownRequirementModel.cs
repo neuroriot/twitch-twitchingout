@@ -39,24 +39,14 @@ namespace MixItUp.Base.Model.Requirements
         [JsonIgnore]
         private LockedDictionary<Guid, DateTimeOffset> individualCooldowns = new LockedDictionary<Guid, DateTimeOffset>();
 
-        public CooldownRequirementModel() { }
-
-#pragma warning disable CS0612 // Type or member is obsolete
-        internal CooldownRequirementModel(MixItUp.Base.ViewModel.Requirement.CooldownRequirementViewModel requirement)
-            : this()
-        {
-            this.Type = (CooldownTypeEnum)(int)requirement.Type;
-            this.IndividualAmount = requirement.Amount;
-            this.GroupName = requirement.GroupName;
-        }
-#pragma warning restore CS0612 // Type or member is obsolete
-
         public CooldownRequirementModel(CooldownTypeEnum type, int amount, string groupName = null)
         {
             this.Type = type;
             this.IndividualAmount = amount;
             this.GroupName = groupName;
         }
+
+        public CooldownRequirementModel() { }
 
         protected override DateTimeOffset RequirementErrorCooldown { get { return CooldownRequirementModel.requirementErrorCooldown; } set { CooldownRequirementModel.requirementErrorCooldown = value; } }
 
@@ -161,7 +151,7 @@ namespace MixItUp.Base.Model.Requirements
             {
                 this.individualCooldowns[parameters.User.ID] = DateTimeOffset.MinValue;
             }
-            return Task.FromResult(0);
+            return Task.CompletedTask;
         }
 
         public override void Reset()

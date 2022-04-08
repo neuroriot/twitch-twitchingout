@@ -9,8 +9,6 @@
              xmlns:CommandsControls="clr-namespace:MixItUp.WPF.Controls.Commands"
              xmlns:ChatControls="clr-namespace:MixItUp.WPF.Controls.Chat"
              xmlns:MaterialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-             xmlns:CommandModels="clr-namespace:MixItUp.Base.Commands;assembly=MixItUp.Base"
-             xmlns:CommandViewModels="clr-namespace:MixItUp.Base.ViewModel.Commands;assembly=MixItUp.Base"
              xmlns:System="clr-namespace:System;assembly=mscorlib"
              xmlns:util="clr-namespace:MixItUp.WPF.Util"
              mc:Ignorable="d"
@@ -77,7 +75,7 @@
                 <TextBlock Grid.Column="1" FontWeight="Bold" HorizontalAlignment="Center" Margin="-50,0,0,0" Text="{x:Static resx:Resources.Commands}"/>
                 <TextBlock Grid.Column="2" FontWeight="Bold" HorizontalAlignment="Center" Margin="-55,0,0,0" Text="{x:Static resx:Resources.Permissions}"/>
                 <Grid Grid.Column="3" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="-40,-4,0,0">
-                    <MaterialDesign:PackIcon Kind="Timer" Height="24" Width="24" />
+                    <MaterialDesign:PackIcon Kind="Timer" Height="24" Width="24" Style="{StaticResource DarkLightBackgroundPackIcon}" />
                 </Grid>
             </Grid>
 
@@ -109,9 +107,7 @@
 
                                 <TextBox Grid.Column="3" Text="{Binding CooldownString}" HorizontalAlignment="Center" VerticalAlignment="Center" Width="50" Margin="5,0,0,0" />
 
-                                <Button Grid.Column="4" Command="{Binding TestCommand}" Width="40" HorizontalAlignment="Center" ToolTip="{x:Static resx:Resources.TestCommand}">
-                                    <MaterialDesign:PackIcon Kind="Play" Height="24" Width="24" Margin="-13,-10" Foreground="{StaticResource WhiteColor}" />
-                                </Button>
+                                <Controls:IconButton Grid.Column="4" Command="{Binding TestCommand}" HorizontalAlignment="Center" Icon="Play" ToolTip="{x:Static resx:Resources.TestCommand}" />
 
                                 <ToggleButton Grid.Column="5" IsChecked="{Binding IsEnabled}" Style="{StaticResource MaterialDesignSwitchToggleButton}" VerticalAlignment="Center" HorizontalAlignment="Center" ToolTip="{x:Static resx:Resources.EnableDisableCommand}" />
                             </Grid>
@@ -132,17 +128,17 @@
             <ScrollViewer x:Name="ListCommands" Grid.Row="0" Visibility="{Binding ShowList, Converter={StaticResource BooleanToVisibilityConverter}}" VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Disabled">
                 <DataGrid ItemsSource="{Binding DefaultGroup}" Style="{StaticResource StandardDataGrid}" CellStyle="{StaticResource StandardDataGridCell}" PreviewMouseWheel="DataGrid_PreviewMouseWheel">
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="{x:Static resx:Resources.Name}" Binding="{Binding Name}" IsReadOnly="True" MinWidth="200" Width="*" />
+                        <DataGridTextColumn Header="{x:Static resx:Resources.Name}" Binding="{Binding Name}" IsReadOnly="True" Width="*" />
                         <DataGridTextColumn Header="{x:Static resx:Resources.Commands}" Binding="{Binding TriggersString}" IsReadOnly="True" MinWidth="125" Width="125" />
                         <DataGridTextColumn Header="{x:Static resx:Resources.Permissions}" Binding="{Binding Requirements.Role.DisplayRole, Converter={StaticResource LocalizationConverter}}" IsReadOnly="True" MinWidth="115" Width="115" />
                         <DataGridTextColumn Binding="{Binding Requirements.Cooldown.IndividualAmount}" IsReadOnly="True" MinWidth="60" Width="60">
                             <DataGridTextColumn.Header>
                                 <Grid HorizontalAlignment="Center" Background="Transparent">
-                                    <MaterialDesign:PackIcon Kind="Timer" Height="24" Width="24" />
+                                    <MaterialDesign:PackIcon Kind="Timer" Height="24" Width="24" Style="{StaticResource DarkLightBackgroundPackIcon}" />
                                 </Grid>
                             </DataGridTextColumn.Header>
                         </DataGridTextColumn>
-                        <DataGridTemplateColumn Header="{x:Static resx:Resources.Actions}" MinWidth="220" Width="220">
+                        <DataGridTemplateColumn Header="{x:Static resx:Resources.Actions}" MinWidth="230" Width="230">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <CommandsControls:CommandListingButtonsControl HorizontalAlignment="Center" EditClicked="CommandButtons_EditClicked" DeleteClicked="CommandButtons_DeleteClicked" EnableDisableToggled="CommandButtonsControl_EnableDisableToggled" />
@@ -161,7 +157,7 @@
                                 <Expander VerticalContentAlignment="Top" HorizontalContentAlignment="Stretch" Visibility="{Binding HasCommands, Converter={StaticResource BooleanToVisibilityConverter}}" Background="{StaticResource PrimaryHueMidBrush}">
                                     <Expander.Header>
                                         <Grid Background="Transparent">
-                                            <TextBlock HorizontalAlignment="Left" Text="{Binding DisplayName}" Foreground="{StaticResource WhiteColor}" />
+                                            <TextBlock HorizontalAlignment="Left" Text="{Binding DisplayName}" Foreground="{StaticResource PrimaryHueMidForegroundBrush}" />
 
                                             <ToggleButton Visibility="{Binding IsEnableSwitchToggable, Converter={StaticResource BooleanToVisibilityConverter}}" Style="{StaticResource MaterialDesignSwitchLightToggleButton}" HorizontalAlignment="Right" IsChecked="{Binding Path=IsEnabled}" />
                                         </Grid>
@@ -169,17 +165,17 @@
 
                                     <DataGrid ItemsSource="{Binding Commands}" Style="{StaticResource StandardDataGrid}" CellStyle="{StaticResource StandardDataGridCell}" PreviewMouseWheel="DataGrid_PreviewMouseWheel">
                                         <DataGrid.Columns>
-                                            <DataGridTextColumn Header="{x:Static resx:Resources.Name}" Binding="{Binding Name}" IsReadOnly="True" MinWidth="200" Width="*" />
+                                            <DataGridTextColumn Header="{x:Static resx:Resources.Name}" Binding="{Binding Name}" IsReadOnly="True" Width="*" />
                                             <DataGridTextColumn Header="{x:Static resx:Resources.Commands}" Binding="{Binding TriggersString}" IsReadOnly="True" MinWidth="125" Width="125" />
                                             <DataGridTextColumn Header="{x:Static resx:Resources.Permissions}" Binding="{Binding Requirements.Role.DisplayRole, Converter={StaticResource LocalizationConverter}}" IsReadOnly="True" MinWidth="115" Width="115" />
                                             <DataGridTextColumn Binding="{Binding Requirements.Cooldown.IndividualAmount}" IsReadOnly="True" MinWidth="60" Width="60">
                                                 <DataGridTextColumn.Header>
                                                     <Grid HorizontalAlignment="Center" Background="Transparent">
-                                                        <MaterialDesign:PackIcon Kind="Timer" Height="24" Width="24" />
+                                                        <MaterialDesign:PackIcon Kind="Timer" Height="24" Width="24" Style="{StaticResource DarkLightBackgroundPackIcon}" />
                                                     </Grid>
                                                 </DataGridTextColumn.Header>
                                             </DataGridTextColumn>
-                                            <DataGridTemplateColumn Header="{x:Static resx:Resources.Actions}" MinWidth="220" Width="220">
+                                            <DataGridTemplateColumn Header="{x:Static resx:Resources.Actions}" MinWidth="230" Width="230">
                                                 <DataGridTemplateColumn.CellTemplate>
                                                     <DataTemplate>
                                                         <CommandsControls:CommandListingButtonsControl HorizontalAlignment="Center" EditClicked="CommandButtons_EditClicked" DeleteClicked="CommandButtons_DeleteClicked" EnableDisableToggled="CommandButtonsControl_EnableDisableToggled" />

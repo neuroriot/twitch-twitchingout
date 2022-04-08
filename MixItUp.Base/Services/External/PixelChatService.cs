@@ -144,13 +144,16 @@ namespace MixItUp.Base.Services.External
         }
     }
 
+    /// <summary>
+    /// https://docs.pixelchat.tv/
+    /// </summary>
     public class PixelChatService : OAuthExternalServiceBase
     {
         private const string BaseAddress = "https://api2.pixelchat.tv/public/";
 
         public PixelChatService() : base(PixelChatService.BaseAddress) { }
 
-        public override string Name { get { return "PixelChat"; } }
+        public override string Name { get { return MixItUp.Base.Resources.PixelChat; } }
 
         public override Task<Result> Connect()
         {
@@ -159,7 +162,7 @@ namespace MixItUp.Base.Services.External
 
         public override Task Disconnect()
         {
-            return Task.FromResult(0);
+            return Task.CompletedTask;
         }
 
         public async Task<PixelChatUserModel> GetUser()
@@ -283,7 +286,7 @@ namespace MixItUp.Base.Services.External
 
         protected override Task RefreshOAuthToken()
         {
-            return Task.FromResult(0);
+            return Task.CompletedTask;
         }
 
         protected override Task<AdvancedHttpClient> GetHttpClient(bool autoRefreshToken = true)

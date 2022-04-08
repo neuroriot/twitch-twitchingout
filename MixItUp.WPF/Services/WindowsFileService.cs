@@ -20,11 +20,11 @@ namespace MixItUp.WPF.Services
 
         private static SemaphoreSlim fileLock = new SemaphoreSlim(1);
 
-        public string TextFileFilter() { return "Text Files|*.txt|All files (*.*)|*.*"; }
-        public string ImageFileFilter() { return "Picture Files|*.bmp;*.gif;*.jpg;*.jpeg;*.png;|All files (*.*)|*.*"; }
-        public string MusicFileFilter() { return "Music Files|*.mp3;*.wav|All files (*.*)|*.*"; }
-        public string VideoFileFilter() { return "Video Files|*.mp4;*.webm|All files (*.*)|*.*"; }
-        public string HTMLFileFilter() { return "HTML Files (*.html)|*.html|All files (*.*)|*.*"; }
+        public string TextFileFilter() { return MixItUp.Base.Resources.TextFileFormatFilter; }
+        public string ImageFileFilter() { return MixItUp.Base.Resources.ImageFileFormatFilter; }
+        public string SoundFileFilter() { return MixItUp.Base.Resources.SoundFileFormatFilter; }
+        public string VideoFileFilter() { return MixItUp.Base.Resources.VideoFileFormatFilter; }
+        public string HTMLFileFilter() { return MixItUp.Base.Resources.HTMLFileFormatFilter; }
 
         public async Task CopyFile(string sourcePath, string destinationPath)
         {
@@ -39,7 +39,7 @@ namespace MixItUp.WPF.Services
         public Task DeleteFile(string filePath)
         {
             File.Delete(filePath);
-            return Task.FromResult(0);
+            return Task.CompletedTask;
         }
 
         public Task CreateDirectory(string path)
@@ -48,7 +48,7 @@ namespace MixItUp.WPF.Services
             {
                 Directory.CreateDirectory(path);
             }
-            return Task.FromResult(0);
+            return Task.CompletedTask;
         }
 
         public async Task CopyDirectory(string sourceDirectoryPath, string destinationDirectoryPath)
@@ -75,6 +75,11 @@ namespace MixItUp.WPF.Services
         public bool FileExists(string filePath)
         {
             return File.Exists(filePath);
+        }
+
+        public bool IsURLPath(string filePath)
+        {
+            return Uri.IsWellFormedUriString(filePath, UriKind.RelativeOrAbsolute);
         }
 
         public long GetFileSize(string filePath)

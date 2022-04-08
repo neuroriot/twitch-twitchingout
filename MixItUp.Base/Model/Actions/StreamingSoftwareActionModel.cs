@@ -1,4 +1,5 @@
 ﻿using MixItUp.Base.Model.Commands;
+using MixItUp.Base.Services;
 using MixItUp.Base.Services.External;
 using MixItUp.Base.Util;
 using StreamingClient.Base.Util;
@@ -80,16 +81,16 @@ namespace MixItUp.Base.Model.Actions
 
             if (softwareType == StreamingSoftwareTypeEnum.OBSStudio)
             {
-                if (ChannelSession.Services.OBSStudio.IsConnected || (await ChannelSession.Services.OBSStudio.Connect()).Success)
+                if (ServiceManager.Get<IOBSStudioService>().IsConnected || (await ServiceManager.Get<IOBSStudioService>().Connect()).Success)
                 {
-                    dimensions = await ChannelSession.Services.OBSStudio.GetSourceDimensions(sceneName, sourceName);
+                    dimensions = await ServiceManager.Get<IOBSStudioService>().GetSourceDimensions(sceneName, sourceName);
                 }
             }
             else if (softwareType == StreamingSoftwareTypeEnum.StreamlabsOBS)
             {
-                if (ChannelSession.Services.StreamlabsOBS.IsConnected || (await ChannelSession.Services.StreamlabsOBS.Connect()).Success)
+                if (ServiceManager.Get<StreamlabsOBSService>().IsConnected || (await ServiceManager.Get<StreamlabsOBSService>().Connect()).Success)
                 {
-                    dimensions = await ChannelSession.Services.StreamlabsOBS.GetSourceDimensions(sceneName, sourceName);
+                    dimensions = await ServiceManager.Get<StreamlabsOBSService>().GetSourceDimensions(sceneName, sourceName);
                 }
             }
 
@@ -192,38 +193,8 @@ namespace MixItUp.Base.Model.Actions
             this.ActionType = actionType;
         }
 
-        private StreamingSoftwareActionModel() { }
-
-#pragma warning disable CS0612 // Type or member is obsolete
-        internal StreamingSoftwareActionModel(MixItUp.Base.Actions.StreamingSoftwareAction action)
-            : base(ActionTypeEnum.StreamingSoftware)
-        {
-            this.StreamingSoftwareType = (StreamingSoftwareTypeEnum)(int)action.SoftwareType;
-            this.ActionType = (StreamingSoftwareActionTypeEnum)(int)action.ActionType;
-            if (this.ActionType == StreamingSoftwareActionTypeEnum.SceneCollection)
-            {
-                this.ItemName = action.SceneCollectionName;
-            }
-            else if (this.ActionType == StreamingSoftwareActionTypeEnum.Scene)
-            {
-                this.ItemName = action.SceneName;
-            }
-            else if (this.ActionType == StreamingSoftwareActionTypeEnum.SourceDimensions || this.ActionType == StreamingSoftwareActionTypeEnum.SourceVisibility ||
-                this.ActionType == StreamingSoftwareActionTypeEnum.TextSource || this.ActionType == StreamingSoftwareActionTypeEnum.WebBrowserSource)
-            {
-                this.ItemName = action.SourceName;
-                this.ParentName = action.SceneName;
-            }
-            this.Visible = action.SourceVisible;
-            this.SourceText = action.SourceText;
-            this.SourceTextFilePath = action.SourceTextFilePath;
-            this.SourceURL = action.SourceURL;
-            if (action.SourceDimensions != null)
-            {
-                this.SourceDimensions = new StreamingSoftwareSourceDimensionsModel(action.SourceDimensions.X, action.SourceDimensions.Y, action.SourceDimensions.Rotation, action.SourceDimensions.XScale, action.SourceDimensions.YScale);
-            }
-        }
-#pragma warning restore CS0612 // Type or member is obsolete
+        [Obsolete]
+        public StreamingSoftwareActionModel() { }
 
         public StreamingSoftwareTypeEnum SelectedStreamingSoftware { get { return (this.StreamingSoftwareType == StreamingSoftwareTypeEnum.DefaultSetting) ? ChannelSession.Settings.DefaultStreamingSoftware : this.StreamingSoftwareType; } }
 
@@ -232,15 +203,15 @@ namespace MixItUp.Base.Model.Actions
             IStreamingSoftwareService ssService = null;
             if (this.SelectedStreamingSoftware == StreamingSoftwareTypeEnum.OBSStudio)
             {
-                ssService = ChannelSession.Services.OBSStudio;
+                ssService = ServiceManager.Get<IOBSStudioService>();
             }
             else if (this.SelectedStreamingSoftware == StreamingSoftwareTypeEnum.XSplit)
             {
-                ssService = ChannelSession.Services.XSplit;
+                ssService = ServiceManager.Get<XSplitService>();
             }
             else if (this.SelectedStreamingSoftware == StreamingSoftwareTypeEnum.StreamlabsOBS)
             {
-                ssService = ChannelSession.Services.StreamlabsOBS;
+                ssService = ServiceManager.Get<StreamlabsOBSService>();
             }
 
             if (ssService != null && ssService.IsEnabled)
@@ -299,6 +270,13 @@ namespace MixItUp.Base.Model.Actions
                             await ssService.SetSourceFilterVisibility(parentName, name, this.Visible);
                         }
                     }
+                    else if (this.ActionType == StreamingSoftwareActionTypeEnum.SceneCollection)
+                    {
+                        if (!string.IsNullOrEmpty(name))
+                        {
+                            await ssService.SetSceneCollection(name);
+                        }
+                    }
                     else if (!string.IsNullOrEmpty(name))
                     {
                         if (this.ActionType == StreamingSoftwareActionTypeEnum.WebBrowserSource && !string.IsNullOrEmpty(this.SourceURL))
@@ -327,10 +305,6 @@ namespace MixItUp.Base.Model.Actions
                             await ssService.SetSourceDimensions(parentName, name, this.SourceDimensions);
                         }
                         await ssService.SetSourceVisibility(parentName, name, this.Visible);
-                    }
-                    else if (this.ActionType == StreamingSoftwareActionTypeEnum.SceneCollection && !string.IsNullOrEmpty(name))
-                    {
-                        await ssService.SetSceneCollection(name);
                     }
                 }
             }

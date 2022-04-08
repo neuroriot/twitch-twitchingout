@@ -1,5 +1,8 @@
 ﻿using MixItUp.Base.Model.Commands;
+using MixItUp.Base.Services;
+using MixItUp.Base.Services.External;
 using MixItUp.Base.Util;
+using System;
 using System.Runtime.Serialization;
 using System.Threading.Tasks;
 
@@ -60,32 +63,33 @@ namespace MixItUp.Base.Model.Actions
             this.ActionType = actionType;
         }
 
-        private VTubeStudioActionModel() { }
+        [Obsolete]
+        public VTubeStudioActionModel() { }
 
         protected override async Task PerformInternal(CommandParametersModel parameters)
         {
-            if (ChannelSession.Settings.VTubeStudioOAuthToken != null && !ChannelSession.Services.VTubeStudio.IsConnected)
+            if (ChannelSession.Settings.VTubeStudioOAuthToken != null && !ServiceManager.Get<VTubeStudioService>().IsConnected)
             {
-                Result result = await ChannelSession.Services.VTubeStudio.Connect(ChannelSession.Settings.VTubeStudioOAuthToken);
+                Result result = await ServiceManager.Get<VTubeStudioService>().Connect(ChannelSession.Settings.VTubeStudioOAuthToken);
                 if (!result.Success)
                 {
                     return;
                 }
             }
 
-            if (ChannelSession.Services.VTubeStudio.IsConnected)
+            if (ServiceManager.Get<VTubeStudioService>().IsConnected)
             {
                 if (this.ActionType == VTubeStudioActionTypeEnum.LoadModel)
                 {
-                    await ChannelSession.Services.VTubeStudio.LoadModel(this.ModelID);
+                    await ServiceManager.Get<VTubeStudioService>().LoadModel(this.ModelID);
                 }
                 else if (this.ActionType == VTubeStudioActionTypeEnum.MoveModel)
                 {
-                    await ChannelSession.Services.VTubeStudio.MoveModel(this.MovementTimeInSeconds, this.MovementRelative, this.MovementX, this.MovementY, this.Rotation, this.Size);
+                    await ServiceManager.Get<VTubeStudioService>().MoveModel(this.MovementTimeInSeconds, this.MovementRelative, this.MovementX, this.MovementY, this.Rotation, this.Size);
                 }
                 else if (this.ActionType == VTubeStudioActionTypeEnum.RunHotKey)
                 {
-                    await ChannelSession.Services.VTubeStudio.RunHotKey(this.HotKeyID);
+                    await ServiceManager.Get<VTubeStudioService>().RunHotKey(this.HotKeyID);
                 }
             }
         }

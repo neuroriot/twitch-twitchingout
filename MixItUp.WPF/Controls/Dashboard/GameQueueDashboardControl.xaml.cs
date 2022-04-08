@@ -21,7 +21,7 @@ namespace MixItUp.WPF.Controls.Dashboard
         protected override async Task InitializeInternal()
         {
             this.DataContext = this.viewModel = new GameQueueMainControlViewModel(this.Window.ViewModel);
-            await this.viewModel.OnLoaded();
+            await this.viewModel.OnOpen();
         }
 
         private async void MoveUpButton_Click(object sender, System.Windows.RoutedEventArgs e)
@@ -40,7 +40,7 @@ namespace MixItUp.WPF.Controls.Dashboard
                 {
                     Logger.Log(ex);
                 }
-                return Task.FromResult(0);
+                return Task.CompletedTask;
             });
         }
 
@@ -60,7 +60,7 @@ namespace MixItUp.WPF.Controls.Dashboard
                 {
                     Logger.Log(ex);
                 }
-                return Task.FromResult(0);
+                return Task.CompletedTask;
             });
         }
 
@@ -80,7 +80,7 @@ namespace MixItUp.WPF.Controls.Dashboard
                 {
                     Logger.Log(ex);
                 }
-                return Task.FromResult(0);
+                return Task.CompletedTask;
             });
         }
     }

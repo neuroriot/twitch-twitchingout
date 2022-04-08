@@ -17,6 +17,8 @@ namespace MixItUp.Base.ViewModel.Settings
 
         public string AutomaticBackupLocationFolderPath { get { return !string.IsNullOrEmpty(ChannelSession.Settings.SettingsBackupLocation) ? ChannelSession.Settings.SettingsBackupLocation : MixItUp.Base.Resources.MixItUpInstallFolder; } }
 
+        public GenericToggleSettingsOptionControlViewModel PreviewProgram { get; set; }
+
         public GenericButtonSettingsOptionControlViewModel InstallationFolder { get; set; }
         public GenericToggleSettingsOptionControlViewModel DiagnosticLogging { get; set; }
         public GenericButtonSettingsOptionControlViewModel RunNewUserWizard { get; set; }
@@ -26,19 +28,19 @@ namespace MixItUp.Base.ViewModel.Settings
         {
             this.BackupSettings = new GenericButtonSettingsOptionControlViewModel(MixItUp.Base.Resources.BackupYourCurrentSettings, MixItUp.Base.Resources.BackupSettings, this.CreateCommand(async () =>
             {
-                string filePath = ChannelSession.Services.FileService.ShowSaveFileDialog(ChannelSession.Settings.Name + "." + SettingsV3Model.SettingsBackupFileExtension);
+                string filePath = ServiceManager.Get<IFileService>().ShowSaveFileDialog(ChannelSession.Settings.Name + "." + SettingsV3Model.SettingsBackupFileExtension, MixItUp.Base.Resources.MixItUpBackupFileFormatFilter);
                 if (!string.IsNullOrEmpty(filePath))
                 {
-                    await ChannelSession.Services.Settings.SavePackagedBackup(ChannelSession.Settings, filePath);
+                    await ServiceManager.Get<SettingsService>().SavePackagedBackup(ChannelSession.Settings, filePath);
                 }
             }));
 
             this.RestoreSettings = new GenericButtonSettingsOptionControlViewModel(MixItUp.Base.Resources.RestoreASettingsBackup, MixItUp.Base.Resources.RestoreSettings, this.CreateCommand(async () =>
             {
-                string filePath = ChannelSession.Services.FileService.ShowOpenFileDialog(string.Format("Mix It Up Settings V2 Backup (*.{0})|*.{0}|All files (*.*)|*.*", SettingsV3Model.SettingsBackupFileExtension));
+                string filePath = ServiceManager.Get<IFileService>().ShowOpenFileDialog(string.Format("Mix It Up Settings V2 Backup (*.{0})|*.{0}|All files (*.*)|*.*", SettingsV3Model.SettingsBackupFileExtension));
                 if (!string.IsNullOrEmpty(filePath))
                 {
-                    Result<SettingsV3Model> result = await ChannelSession.Services.Settings.RestorePackagedBackup(filePath);
+                    Result<SettingsV3Model> result = await ServiceManager.Get<SettingsService>().RestorePackagedBackup(filePath);
                     if (result.Success)
                     {
                         ChannelSession.AppSettings.BackupSettingsFilePath = filePath;
@@ -57,13 +59,23 @@ namespace MixItUp.Base.ViewModel.Settings
 
             this.AutomaticBackupLocation = new GenericButtonSettingsOptionControlViewModel(MixItUp.Base.Resources.AutomatedSettingsBackupLocation, MixItUp.Base.Resources.SetLocation, this.CreateCommand(() =>
             {
-                string folderPath = ChannelSession.Services.FileService.ShowOpenFolderDialog();
+                string folderPath = ServiceManager.Get<IFileService>().ShowOpenFolderDialog();
                 if (!string.IsNullOrEmpty(folderPath) && Directory.Exists(folderPath))
                 {
                     ChannelSession.Settings.SettingsBackupLocation = folderPath;
                     this.NotifyPropertyChanged("AutomaticBackupLocationFolderPath");
                 }
             }));
+
+            this.PreviewProgram = new GenericToggleSettingsOptionControlViewModel(
+                MixItUp.Base.Resources.UpdatePreviewProgram,
+                ChannelSession.AppSettings.PreviewProgram,
+                async (value) =>
+                {
+                    await DialogHelper.ShowMessage(MixItUp.Base.Resources.UpdatePreviewProgramTooltip);
+                    ChannelSession.AppSettings.PreviewProgram = value;
+                },
+                MixItUp.Base.Resources.UpdatePreviewProgramTooltip);
 
             this.InstallationFolder = new GenericButtonSettingsOptionControlViewModel(MixItUp.Base.Resources.AccessTheFolderWhereMixItUpIsInstalled, MixItUp.Base.Resources.InstallationFolder, this.CreateCommand(() =>
             {

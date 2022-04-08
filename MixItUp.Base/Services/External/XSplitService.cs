@@ -81,17 +81,18 @@ namespace MixItUp.Base.Services.External
 
     public class XSplitService : WebSocketHttpListenerServerBase, IStreamingSoftwareService
     {
+        public const string XSplitHttpListenerServerAddress = "http://localhost:8211/";
+
         public event EventHandler Connected = delegate { };
         public event EventHandler Disconnected = delegate { };
 
-        public XSplitService(string address)
-            : base(address)
+        public XSplitService()
         {
             base.OnConnectedOccurred += XSplitService_OnConnectedOccurred;
             base.OnDisconnectOccurred += XSplitService_OnDisconnectOccurred;
         }
 
-        public string Name { get { return "XSplit"; } }
+        public string Name { get { return MixItUp.Base.Resources.XSplit; } }
 
         public bool IsEnabled { get { return ChannelSession.Settings.EnableXSplitConnection; } }
 
@@ -100,13 +101,13 @@ namespace MixItUp.Base.Services.External
         public Task<Result> Connect()
         {
             this.IsConnected = false;
-            if (this.Start())
+            if (this.Start(XSplitHttpListenerServerAddress))
             {
                 this.IsConnected = true;
-                ChannelSession.Services.Telemetry.TrackService("XSplit");
+                ServiceManager.Get<ITelemetryService>().TrackService("XSplit");
                 return Task.FromResult(new Result());
             }
-            return Task.FromResult(new Result("Failed to start web socket listening server"));
+            return Task.FromResult(new Result(MixItUp.Base.Resources.XSplitFailedToStartServer));
         }
 
         public async Task Disconnect()
@@ -135,25 +136,25 @@ namespace MixItUp.Base.Services.External
             await this.Send(new XSplitPacket("sourceUpdate", JObject.FromObject(new XSplitSource() { sceneName = sceneName, sourceName = sourceName, sourceVisible = visibility })));
         }
 
-        public Task SetSourceFilterVisibility(string sourceName, string filterName, bool visibility) { return Task.FromResult(0); }
+        public Task SetSourceFilterVisibility(string sourceName, string filterName, bool visibility) { return Task.CompletedTask; }
 
         public async Task SetWebBrowserSourceURL(string sceneName, string sourceName, string url)
         {
             await this.Send(new XSplitPacket("sourceUpdate", JObject.FromObject(new XSplitWebBrowserSource() { sceneName = sceneName, sourceName = sourceName, webBrowserUrl = url })));
         }
 
-        public Task SetSourceDimensions(string sceneName, string sourceName, StreamingSoftwareSourceDimensionsModel dimensions) { return Task.FromResult(0); }
+        public Task SetSourceDimensions(string sceneName, string sourceName, StreamingSoftwareSourceDimensionsModel dimensions) { return Task.CompletedTask; }
 
         public Task<StreamingSoftwareSourceDimensionsModel> GetSourceDimensions(string sceneName, string sourceName) { return Task.FromResult(new StreamingSoftwareSourceDimensionsModel()); }
 
-        public Task StartStopStream() { return Task.FromResult(0); }
+        public Task StartStopStream() { return Task.CompletedTask; }
 
-        public Task StartStopRecording() { return Task.FromResult(0); }
+        public Task StartStopRecording() { return Task.CompletedTask; }
 
-        public Task SaveReplayBuffer() { return Task.FromResult(0); }
+        public Task SaveReplayBuffer() { return Task.CompletedTask; }
         public Task<bool> StartReplayBuffer() { return Task.FromResult(false); }
 
-        public Task SetSceneCollection(string sceneCollectionName) { return Task.FromResult(0); }
+        public Task SetSceneCollection(string sceneCollectionName) { return Task.CompletedTask; }
 
         protected override WebSocketServerBase CreateWebSocketServer(HttpListenerContext listenerContext)
         {
@@ -162,13 +163,13 @@ namespace MixItUp.Base.Services.External
 
         private void XSplitService_OnConnectedOccurred(object sender, EventArgs e)
         {
-            ChannelSession.ReconnectionOccurred("XSplit");
+            ChannelSession.ReconnectionOccurred(MixItUp.Base.Resources.XSplit);
             this.Connected(sender, e);
         }
 
         private void XSplitService_OnDisconnectOccurred(object sender, WebSocketCloseStatus e)
         {
-            ChannelSession.DisconnectionOccurred("XSplit");
+            ChannelSession.DisconnectionOccurred(MixItUp.Base.Resources.XSplit);
             this.Disconnected(sender, new EventArgs());
         }
     }

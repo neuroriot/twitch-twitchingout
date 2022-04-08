@@ -1,5 +1,6 @@
 ﻿using MixItUp.Base.Model.Actions;
 using MixItUp.Base.Model.Overlay;
+using MixItUp.Base.Services;
 using MixItUp.Base.Util;
 using MixItUp.Base.ViewModel.Overlay;
 using StreamingClient.Base.Util;
@@ -48,25 +49,25 @@ namespace MixItUp.Base.ViewModel.Actions
         }
         private OverlayActionTypeEnum selectedActionType;
 
-        public bool OverlayNotEnabled { get { return !ChannelSession.Services.Overlay.IsConnected; } }
+        public bool OverlayNotEnabled { get { return !ServiceManager.Get<OverlayService>().IsConnected; } }
 
         public bool OverlayEnabled { get { return !this.OverlayNotEnabled &&  SelectedActionType != OverlayActionTypeEnum.ShowHideWidget; } }
 
-        public IEnumerable<string> OverlayEndpoints { get { return ChannelSession.Services.Overlay.GetOverlayNames(); } }
+        public IEnumerable<string> OverlayEndpoints { get { return ServiceManager.Get<OverlayService>().GetOverlayNames(); } }
 
         public string SelectedOverlayEndpoint
         {
             get { return this.selectedOverlayEndpoint; }
             set
             {
-                var overlays = ChannelSession.Services.Overlay.GetOverlayNames();
+                var overlays = ServiceManager.Get<OverlayService>().GetOverlayNames();
                 if (overlays.Contains(value))
                 {
                     this.selectedOverlayEndpoint = value;
                 }
                 else
                 {
-                    this.selectedOverlayEndpoint = ChannelSession.Services.Overlay.DefaultOverlayName;
+                    this.selectedOverlayEndpoint = ServiceManager.Get<OverlayService>().DefaultOverlayName;
                 }
                 this.NotifyPropertyChanged();
             }
@@ -288,7 +289,7 @@ namespace MixItUp.Base.ViewModel.Actions
             }
             else
             {
-                this.SelectedOverlayEndpoint = ChannelSession.Services.Overlay.DefaultOverlayName;
+                this.SelectedOverlayEndpoint = ServiceManager.Get<OverlayService>().DefaultOverlayName;
             }
 
             if (action.WidgetID != Guid.Empty)
@@ -351,7 +352,7 @@ namespace MixItUp.Base.ViewModel.Actions
         public OverlayActionEditorControlViewModel()
             : base()
         {
-            this.SelectedOverlayEndpoint = ChannelSession.Services.Overlay.DefaultOverlayName;
+            this.SelectedOverlayEndpoint = ServiceManager.Get<OverlayService>().DefaultOverlayName;
         }
 
         public override Task<Result> Validate()

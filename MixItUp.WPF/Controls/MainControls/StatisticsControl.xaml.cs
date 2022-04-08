@@ -1,9 +1,8 @@
-﻿using MixItUp.Base;
+﻿using MixItUp.Base.Services;
 using MixItUp.Base.Util;
 using MixItUp.WPF.Controls.Statistics;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Windows.Controls;
 
 namespace MixItUp.WPF.Controls.MainControls
 {
@@ -22,14 +21,9 @@ namespace MixItUp.WPF.Controls.MainControls
         protected override Task InitializeInternal()
         {
             this.StatisticsOverviewListView.ItemsSource = this.statisticOverviewControls;
-            this.statisticOverviewControls.AddRange(ChannelSession.Services.Statistics.Statistics.Select(s => new StatisticsOverviewControl(s)));
+            this.statisticOverviewControls.AddRange(ServiceManager.Get<StatisticsService>().Statistics.Select(s => new StatisticsOverviewControl(s)));
 
             return base.InitializeInternal();
-        }
-
-        private void StatisticsOverviewListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-
         }
 
         //private void AutoExportCheckBox_Checked(object sender, RoutedEventArgs e) { ChannelSession.Settings.AutoExportStatistics = this.AutoExportCheckBox.IsChecked.GetValueOrDefault(); }
@@ -38,7 +32,7 @@ namespace MixItUp.WPF.Controls.MainControls
         //{
         //    await this.Window.RunAsyncOperation(async () =>
         //    {
-        //        string fileName = ChannelSession.Services.FileService.ShowSaveFileDialog(string.Format("Stream Statistics - {0}.xls", ChannelSession.Services.Statistics.StartTime.ToString("MM-dd-yy HH-mm")));
+        //        string fileName = ServiceManager.Get<IFileService>().ShowSaveFileDialog(string.Format("Stream Statistics - {0}.xls", ServiceManager.Get<StatisticsService>().StartTime.ToString("MM-dd-yy HH-mm")));
         //        if (!string.IsNullOrEmpty(fileName))
         //        {
         //            bool result = await Task.Run(() =>
@@ -51,7 +45,7 @@ namespace MixItUp.WPF.Controls.MainControls
 
         //                        using (Workbook workbook = application.Workbooks.Add())
         //                        {
-        //                            foreach (StatisticDataTrackerModelBase statistic in ChannelSession.Services.Statistics.Statistics)
+        //                            foreach (StatisticDataTrackerModelBase statistic in ServiceManager.Get<StatisticsService>().Statistics)
         //                            {
         //                                using (Worksheet worksheet = (Worksheet)workbook.Worksheets.Add())
         //                                {

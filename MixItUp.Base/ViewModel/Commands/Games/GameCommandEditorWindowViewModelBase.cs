@@ -4,11 +4,11 @@ using MixItUp.Base.Model.Commands.Games;
 using MixItUp.Base.Model.Currency;
 using MixItUp.Base.Model.Requirements;
 using MixItUp.Base.Model.User;
+using MixItUp.Base.Services;
 using MixItUp.Base.Util;
 using MixItUp.Base.ViewModel.Commands;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -57,7 +57,7 @@ namespace MixItUp.Base.ViewModel.Games
             this.Payout = payout;
         }
 
-        public RoleProbabilityPayoutViewModel(RoleProbabilityPayoutModel model) : this(model.Role, model.Probability, model.Payout * 100) { }
+        public RoleProbabilityPayoutViewModel(RoleProbabilityPayoutModel model) : this(model.UserRole, model.Probability, model.Payout * 100) { }
 
         public RoleProbabilityPayoutModel GetModel() { return new RoleProbabilityPayoutModel(this.Role, this.Probability, ((double)this.Payout) / 100.0); }
     }
@@ -159,7 +159,7 @@ namespace MixItUp.Base.ViewModel.Games
             this.Name = name;
             this.RoleProbabilityPayouts.Add(new RoleProbabilityPayoutViewModel(UserRoleEnum.User, probability, payout));
             this.RoleProbabilityPayouts.Add(new RoleProbabilityPayoutViewModel(UserRoleEnum.Subscriber, probability, payout));
-            this.RoleProbabilityPayouts.Add(new RoleProbabilityPayoutViewModel(UserRoleEnum.Mod, probability, payout));
+            this.RoleProbabilityPayouts.Add(new RoleProbabilityPayoutViewModel(UserRoleEnum.Moderator, probability, payout));
             this.Command = command;
             this.SetRoleProbabilityPayoutProperties();
         }
@@ -167,8 +167,28 @@ namespace MixItUp.Base.ViewModel.Games
         public GameOutcomeViewModel(GameOutcomeModel model)
         {
             this.Name = model.Name;
-            this.RoleProbabilityPayouts.AddRange(model.RoleProbabilityPayouts.Select(kvp => new RoleProbabilityPayoutViewModel(kvp.Value)));
             this.Command = model.Command;
+
+            if (model.UserRoleProbabilityPayouts.Count > 0)
+            {
+                foreach (var kvp in model.UserRoleProbabilityPayouts)
+                {
+#pragma warning disable CS0612 // Type or member is obsolete
+                    if (kvp.Key != kvp.Value.UserRole)
+                    {
+                        kvp.Value.UserRole = kvp.Key;
+                    }
+#pragma warning restore CS0612 // Type or member is obsolete
+                    this.RoleProbabilityPayouts.Add(new RoleProbabilityPayoutViewModel(kvp.Value));
+                }
+            }
+            else
+            {
+                this.RoleProbabilityPayouts.Add(new RoleProbabilityPayoutViewModel(UserRoleEnum.User, 0, 0));
+                this.RoleProbabilityPayouts.Add(new RoleProbabilityPayoutViewModel(UserRoleEnum.Subscriber, 0, 0));
+                this.RoleProbabilityPayouts.Add(new RoleProbabilityPayoutViewModel(UserRoleEnum.Moderator, 0, 0));
+            }
+
             this.SetRoleProbabilityPayoutProperties();
         }
         
@@ -193,7 +213,7 @@ namespace MixItUp.Base.ViewModel.Games
         {
             this.userRoleProbabilityPayout = this.RoleProbabilityPayouts.FirstOrDefault(rpp => rpp.Role == UserRoleEnum.User);
             this.subRoleProbabilityPayout = this.RoleProbabilityPayouts.FirstOrDefault(rpp => rpp.Role == UserRoleEnum.Subscriber);
-            this.modRoleProbabilityPayout = this.RoleProbabilityPayouts.FirstOrDefault(rpp => rpp.Role == UserRoleEnum.Mod);
+            this.modRoleProbabilityPayout = this.RoleProbabilityPayouts.FirstOrDefault(rpp => rpp.Role == UserRoleEnum.Moderator);
         }
     }
 
@@ -253,10 +273,10 @@ namespace MixItUp.Base.ViewModel.Games
         public override Task SaveCommandToSettings(CommandModelBase command)
         {
             GameCommandModelBase c = (GameCommandModelBase)command;
-            ChannelSession.Services.Command.GameCommands.Remove(c);
-            ChannelSession.Services.Command.GameCommands.Add(c);
-            ChannelSession.Services.Chat.RebuildCommandTriggers();
-            return Task.FromResult(0);
+            ServiceManager.Get<CommandService>().GameCommands.Remove(c);
+            ServiceManager.Get<CommandService>().GameCommands.Add(c);
+            ServiceManager.Get<ChatService>().RebuildCommandTriggers();
+            return Task.CompletedTask;
         }
 
         protected Result ValidateOutcomes(IEnumerable<GameOutcomeViewModel> outcomes)

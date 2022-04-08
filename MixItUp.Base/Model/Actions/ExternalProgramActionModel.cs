@@ -35,25 +35,15 @@ namespace MixItUp.Base.Model.Actions
             this.SaveOutput = saveOutput;
         }
 
-#pragma warning disable CS0612 // Type or member is obsolete
-        internal ExternalProgramActionModel(MixItUp.Base.Actions.ExternalProgramAction action)
-            : base(ActionTypeEnum.ExternalProgram)
-        {
-            this.FilePath = action.FilePath;
-            this.Arguments = action.Arguments;
-            this.ShowWindow = action.ShowWindow;
-            this.WaitForFinish = action.WaitForFinish;
-        }
-#pragma warning restore CS0612 // Type or member is obsolete
-
-        private ExternalProgramActionModel() { }
+        [Obsolete]
+        public ExternalProgramActionModel() { }
 
         protected override async Task PerformInternal(CommandParametersModel parameters)
         {
             List<string> output = new List<string>();
 
             Process process = new Process();
-            process.StartInfo.FileName = this.FilePath;
+            process.StartInfo.FileName = await ReplaceStringWithSpecialModifiers(this.FilePath, parameters);
             process.StartInfo.Arguments = await ReplaceStringWithSpecialModifiers(this.Arguments, parameters);
             process.StartInfo.CreateNoWindow = !this.ShowWindow;
             process.StartInfo.WindowStyle = (!this.ShowWindow) ? ProcessWindowStyle.Hidden : ProcessWindowStyle.Normal;

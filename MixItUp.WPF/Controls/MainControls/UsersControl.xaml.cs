@@ -1,12 +1,13 @@
-﻿using MixItUp.Base.Model.User;
-using MixItUp.Base.ViewModel.MainControls;
+﻿using MixItUp.Base.Util;
 using MixItUp.Base.ViewModel;
+using MixItUp.Base.ViewModel.MainControls;
+using MixItUp.Base.ViewModel.User;
+using MixItUp.WPF.Controls.Dialogs;
 using MixItUp.WPF.Windows.Users;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Threading;
-using MixItUp.Base.Util;
 
 namespace MixItUp.WPF.Controls.MainControls
 {
@@ -29,7 +30,7 @@ namespace MixItUp.WPF.Controls.MainControls
         protected override async Task InitializeInternal()
         {
             this.DataContext = this.viewModel = new UsersMainControlViewModel((MainWindowViewModel)this.Window.ViewModel);
-            await this.viewModel.OnLoaded();
+            await this.viewModel.OnOpen();
             await base.InitializeInternal();
         }
 
@@ -62,8 +63,8 @@ namespace MixItUp.WPF.Controls.MainControls
         private void UserEditButton_Click(object sender, RoutedEventArgs e)
         {
             Button button = (Button)sender;
-            UserDataModel userData = (UserDataModel)button.DataContext;
-            UserDataEditorWindow window = new UserDataEditorWindow(userData);
+            UserV2ViewModel userData = (UserV2ViewModel)button.DataContext;
+            UserDataEditorWindow window = new UserDataEditorWindow(userData.Model);
             window.Closed += Window_Closed;
             window.Show();
         }
@@ -71,8 +72,8 @@ namespace MixItUp.WPF.Controls.MainControls
         private async void UserDeleteButton_Click(object sender, RoutedEventArgs e)
         {
             Button button = (Button)sender;
-            UserDataModel userData = (UserDataModel)button.DataContext;
-            await this.viewModel.DeleteUser(userData);
+            UserV2ViewModel userData = (UserV2ViewModel)button.DataContext;
+            await this.viewModel.DeleteUser(userData.Model);
         }
 
         private void UserDataGridView_Sorted(object sender, DataGridColumn column)
@@ -85,6 +86,15 @@ namespace MixItUp.WPF.Controls.MainControls
             UserDataImportWindow window = new UserDataImportWindow();
             window.Closed += Window_Closed;
             window.Show();
+        }
+
+        private async void AddUserDataButton_Click(object sender, RoutedEventArgs e)
+        {
+            AddUserDialogControl dialog = new AddUserDialogControl();
+            if (bool.Equals(await DialogHelper.ShowCustom(dialog), true))
+            {
+                await this.viewModel.FindAndAddUser(dialog.ViewModel.SelectedStreamingPlatform, dialog.ViewModel.Username);
+            }
         }
 
         private void Window_Closed(object sender, System.EventArgs e)

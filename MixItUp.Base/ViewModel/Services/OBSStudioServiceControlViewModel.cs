@@ -1,4 +1,6 @@
-﻿using MixItUp.Base.Util;
+﻿using MixItUp.Base.Services;
+using MixItUp.Base.Services.External;
+using MixItUp.Base.Util;
 using System;
 using System.Windows.Input;
 
@@ -25,6 +27,8 @@ namespace MixItUp.Base.ViewModel.Services
 
         public Func<string> Password { get; set; }
 
+        public override string WikiPageName { get { return "obs-studio"; } }
+
         public OBSStudioServiceControlViewModel()
             : base(Resources.OBSStudio)
         {
@@ -35,7 +39,7 @@ namespace MixItUp.Base.ViewModel.Services
                 ChannelSession.Settings.OBSStudioServerIP = this.IPAddress;
                 ChannelSession.Settings.OBSStudioServerPassword = this.Password();
 
-                Result result = await ChannelSession.Services.OBSStudio.Connect();
+                Result result = await ServiceManager.Get<IOBSStudioService>().Connect();
                 if (result.Success)
                 {
                     this.IsConnected = true;
@@ -52,13 +56,13 @@ namespace MixItUp.Base.ViewModel.Services
                 ChannelSession.Settings.OBSStudioServerIP = null;
                 ChannelSession.Settings.OBSStudioServerPassword = null;
 
-                await ChannelSession.Services.OBSStudio.Disconnect();
+                await ServiceManager.Get<IOBSStudioService>().Disconnect();
                 this.IsConnected = false;
             });
 
             this.TestConnectionCommand = this.CreateCommand(async () =>
             {
-                if (await ChannelSession.Services.OBSStudio.TestConnection())
+                if (await ServiceManager.Get<IOBSStudioService>().TestConnection())
                 {
                     await DialogHelper.ShowMessage(Resources.OBSStudioSuccess);
                 }
@@ -68,7 +72,7 @@ namespace MixItUp.Base.ViewModel.Services
                 }
             });
 
-            this.IsConnected = ChannelSession.Services.OBSStudio.IsConnected;
+            this.IsConnected = ServiceManager.Get<IOBSStudioService>().IsConnected;
         }
     }
 }

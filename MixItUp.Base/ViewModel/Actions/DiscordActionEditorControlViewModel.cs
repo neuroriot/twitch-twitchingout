@@ -1,4 +1,5 @@
 ﻿using MixItUp.Base.Model.Actions;
+using MixItUp.Base.Services;
 using MixItUp.Base.Services.External;
 using MixItUp.Base.Util;
 using StreamingClient.Base.Util;
@@ -150,11 +151,11 @@ namespace MixItUp.Base.ViewModel.Actions
             return Task.FromResult<ActionModelBase>(null);
         }
 
-        protected override async Task OnLoadedInternal()
+        protected override async Task OnOpenInternal()
         {
-            if (ChannelSession.Services.Discord.IsConnected)
+            if (ServiceManager.Get<DiscordService>().IsConnected)
             {
-                List<DiscordChannel> channels = new List<DiscordChannel>(await ChannelSession.Services.Discord.GetServerChannels(ChannelSession.Services.Discord.Server));
+                List<DiscordChannel> channels = new List<DiscordChannel>(await ServiceManager.Get<DiscordService>().GetServerChannels(ServiceManager.Get<DiscordService>().Server));
                 this.Channels.AddRange(channels.Where(c => c.Type == DiscordChannel.DiscordChannelTypeEnum.Announcements || c.Type == DiscordChannel.DiscordChannelTypeEnum.Text));
 
                 if (!string.IsNullOrEmpty(this.existingSelectedChannel))
@@ -162,7 +163,7 @@ namespace MixItUp.Base.ViewModel.Actions
                     this.SelectedChannel = this.Channels.FirstOrDefault(c => c.ID.Equals(this.existingSelectedChannel));
                 }
             }
-            await base.OnLoadedInternal();
+            await base.OnOpenInternal();
         }
     }
 }

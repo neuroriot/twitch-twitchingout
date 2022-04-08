@@ -1,9 +1,10 @@
-﻿using MixItUp.Base.Model.User;
+﻿using MixItUp.Base.Model.Commands;
+using MixItUp.Base.Model.User;
+using MixItUp.Base.Services;
 using MixItUp.Base.Util;
 using MixItUp.Base.ViewModel.User;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -52,11 +53,11 @@ namespace MixItUp.Base.ViewModel.MainControls
         public QuotesMainControlViewModel(MainWindowViewModel windowViewModel)
             : base(windowViewModel)
         {
-            this.AddQuoteCommand = this.CreateCommand(() =>
+            this.AddQuoteCommand = this.CreateCommand(async () =>
             {
                 if (!string.IsNullOrEmpty(this.AddQuoteText))
                 {
-                    ChannelSession.Settings.Quotes.Add(new UserQuoteModel(UserQuoteViewModel.GetNextQuoteNumber(), this.AddQuoteText, DateTimeOffset.Now, ChannelSession.TwitchChannelInformation?.game_name));
+                    ChannelSession.Settings.Quotes.Add(new UserQuoteModel(UserQuoteViewModel.GetNextQuoteNumber(), this.AddQuoteText, DateTimeOffset.Now, await GamePreMadeChatCommandModel.GetCurrentGameName(ChannelSession.Settings.DefaultStreamingPlatform)));
                     this.Refresh();
 
                     this.AddQuoteText = string.Empty;
@@ -65,7 +66,7 @@ namespace MixItUp.Base.ViewModel.MainControls
 
             this.ExportQuotesCommand = this.CreateCommand(async () =>
             {
-                string filePath = ChannelSession.Services.FileService.ShowSaveFileDialog("Quotes.txt");
+                string filePath = ServiceManager.Get<IFileService>().ShowSaveFileDialog("Quotes.txt", MixItUp.Base.Resources.TextFileFormatFilter);
                 if (!string.IsNullOrEmpty(filePath))
                 {
                     List<List<string>> contents = new List<List<string>>();
@@ -101,7 +102,7 @@ namespace MixItUp.Base.ViewModel.MainControls
             }
         }
 
-        protected override Task OnLoadedInternal()
+        protected override Task OnOpenInternal()
         {
             this.Refresh();
             return base.OnVisibleInternal();

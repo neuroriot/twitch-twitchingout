@@ -1,6 +1,9 @@
-﻿using MixItUp.Base.Model.Requirements;
+﻿using MixItUp.Base.Model;
+using MixItUp.Base.Model.Requirements;
 using MixItUp.Base.Model.User;
+using MixItUp.Base.Services;
 using MixItUp.Base.Services.External;
+using MixItUp.Base.Services.Trovo;
 using MixItUp.Base.Util;
 using MixItUp.Base.ViewModels;
 using System;
@@ -48,6 +51,19 @@ namespace MixItUp.Base.ViewModel.Requirements
     {
         private static PatreonBenefit NonePatreonBenefit = new PatreonBenefit() { ID = string.Empty, Title = "None" };
 
+        public IEnumerable<StreamingPlatformTypeEnum> Platforms { get { return StreamingPlatforms.SelectablePlatforms; } }
+
+        public StreamingPlatformTypeEnum SelectedPlatform
+        {
+            get { return this.selectedPlatform; }
+            set
+            {
+                this.selectedPlatform = value;
+                this.NotifyPropertyChanged();
+            }
+        }
+        private StreamingPlatformTypeEnum selectedPlatform = StreamingPlatformTypeEnum.All;
+
         public bool IsAdvancedRolesSelected
         {
             get { return this.isAdvancedRolesSelected; }
@@ -63,7 +79,7 @@ namespace MixItUp.Base.ViewModel.Requirements
 
         public bool ShowSimpleRoles { get { return !this.IsAdvancedRolesSelected; } }
 
-        public IEnumerable<UserRoleEnum> Roles { get { return UserDataModel.GetSelectableUserRoles(); } }
+        public IEnumerable<UserRoleEnum> Roles { get { return UserRoles.Generic; } }
 
         public UserRoleEnum SelectedRole
         {
@@ -77,15 +93,7 @@ namespace MixItUp.Base.ViewModel.Requirements
         }
         private UserRoleEnum selectedRole = UserRoleEnum.User;
 
-        public IEnumerable<UserRoleEnum> AdvancedRoles
-        {
-            get
-            {
-                List<UserRoleEnum> roles = new List<UserRoleEnum>(UserDataModel.GetSelectableUserRoles());
-                roles.Remove(UserRoleEnum.VIPExclusive);
-                return roles;
-            }
-        }
+        public IEnumerable<UserRoleEnum> AdvancedRoles { get { return UserRoles.All; } }
 
         public UserRoleEnum SelectedAdvancedRole
         {
@@ -127,7 +135,20 @@ namespace MixItUp.Base.ViewModel.Requirements
         }
         private int subscriberTier = 1;
 
-        public bool IsPatreonConnected { get { return ChannelSession.Services.Patreon.IsConnected; } }
+        public bool IsTrovoConnected { get { return ServiceManager.Get<TrovoSessionService>().IsConnected; } }
+
+        public string TrovoCustomRole
+        {
+            get { return this.trovoCustomRole; }
+            set
+            {
+                this.trovoCustomRole = value;
+                this.NotifyPropertyChanged();
+            }
+        }
+        private string trovoCustomRole;
+
+        public bool IsPatreonConnected { get { return ServiceManager.Get<PatreonService>().IsConnected; } }
 
         public IEnumerable<PatreonBenefit> PatreonBenefits
         {
@@ -137,7 +158,7 @@ namespace MixItUp.Base.ViewModel.Requirements
                 benefits.Add(RoleRequirementViewModel.NonePatreonBenefit);
                 if (this.IsPatreonConnected)
                 {
-                    benefits.AddRange(ChannelSession.Services.Patreon.Campaign.Benefits.Values.OrderBy(b => b.Title));
+                    benefits.AddRange(ServiceManager.Get<PatreonService>().Campaign.Benefits.Values.OrderBy(b => b.Title));
                 }
                 return benefits;
             }
@@ -171,19 +192,24 @@ namespace MixItUp.Base.ViewModel.Requirements
         public RoleRequirementViewModel(RoleRequirementModel requirement)
             : this()
         {
-            if (requirement.RoleList.Count > 0)
+            this.SelectedPlatform = requirement.StreamingPlatform;
+            if (requirement.UserRoleList.Count > 0)
             {
                 this.IsAdvancedRolesSelected = true;
-                foreach (UserRoleEnum role in requirement.RoleList)
+                foreach (UserRoleEnum role in requirement.UserRoleList)
                 {
                     this.SelectedAdvancedRoles.Add(new UserRoleViewModel(this, role));
                 }
             }
             else
             {
-                this.SelectedRole = requirement.Role;
+                this.SelectedRole = requirement.UserRole;
             }
+
             this.SubscriberTier = requirement.SubscriberTier;
+
+            this.TrovoCustomRole = requirement.TrovoCustomRole;
+
             if (this.IsPatreonConnected && !string.IsNullOrEmpty(requirement.PatreonBenefitID))
             {
                 this.SelectedPatreonBenefit = this.PatreonBenefits.FirstOrDefault(b => b.ID.Equals(requirement.PatreonBenefitID));
@@ -210,11 +236,11 @@ namespace MixItUp.Base.ViewModel.Requirements
         {
             if (this.IsAdvancedRolesSelected)
             {
-                return new RoleRequirementModel(this.SelectedAdvancedRoles.Select(r => r.Role), this.SubscriberTier, this.selectedPatreonBenefit?.ID);
+                return new RoleRequirementModel(this.SelectedPlatform, this.SelectedAdvancedRoles.Select(r => r.Role), this.SubscriberTier, this.TrovoCustomRole, this.selectedPatreonBenefit?.ID);
             }
             else
             {
-                return new RoleRequirementModel(this.SelectedRole, this.SubscriberTier, this.selectedPatreonBenefit?.ID);
+                return new RoleRequirementModel(this.SelectedPlatform, this.SelectedRole, this.SubscriberTier, this.TrovoCustomRole, this.selectedPatreonBenefit?.ID);
             }
         }
     }

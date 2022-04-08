@@ -1,4 +1,5 @@
 ﻿using MixItUp.Base.Model.Commands;
+using MixItUp.Base.Services;
 using MixItUp.Base.Util;
 using MixItUp.Base.ViewModel.User;
 using System;
@@ -36,7 +37,8 @@ namespace MixItUp.Base.Model.Requirements
             this.Optional = optional;
         }
 
-        private ArgumentsRequirementItemModel() { }
+        [Obsolete]
+        public ArgumentsRequirementItemModel() { }
 
         public string DisplayName
         {
@@ -51,7 +53,7 @@ namespace MixItUp.Base.Model.Requirements
             }
         }
 
-        public Task<Result> Validate(string argument)
+        public Task<Result> Validate(CommandParametersModel parameters, string argument)
         {
             if (this.Optional && string.IsNullOrEmpty(argument))
             {
@@ -62,7 +64,7 @@ namespace MixItUp.Base.Model.Requirements
             {
                 if (!string.IsNullOrEmpty(argument))
                 {
-                    UserViewModel user = ChannelSession.Services.User.GetActiveUserByUsername(argument);
+                    UserV2ViewModel user = ServiceManager.Get<UserService>().GetActiveUserByPlatformUsername(parameters.Platform, argument);
                     if (user != null)
                     {
                         return Task.FromResult<Result>(new Result());
@@ -108,7 +110,7 @@ namespace MixItUp.Base.Model.Requirements
             for (int i = 0; i < this.Items.Count; i++)
             {
                 parameters.Arguments.TryGetValue(i, out string argument);
-                Result result = await this.Items[i].Validate(argument);
+                Result result = await this.Items[i].Validate(parameters, argument);
                 if (!result.Success)
                 {
                     return new Result($"{MixItUp.Base.Resources.Usage}: {string.Join(" ", this.Items.Select(a => a.DisplayName))}");

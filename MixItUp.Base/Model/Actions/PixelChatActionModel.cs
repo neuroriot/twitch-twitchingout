@@ -1,4 +1,5 @@
 ﻿using MixItUp.Base.Model.Commands;
+using MixItUp.Base.Services;
 using MixItUp.Base.Services.External;
 using MixItUp.Base.Util;
 using MixItUp.Base.ViewModel.User;
@@ -86,15 +87,16 @@ namespace MixItUp.Base.Model.Actions
             this.ActionType = actionType;
         }
 
-        private PixelChatActionModel() { }
+        [Obsolete]
+        public PixelChatActionModel() { }
 
         protected override async Task PerformInternal(CommandParametersModel parameters)
         {
-            if (ChannelSession.Services.PixelChat.IsConnected)
+            if (ServiceManager.Get<PixelChatService>().IsConnected)
             {
                 if (this.ActionType == PixelChatActionTypeEnum.ShowHideSceneComponent)
                 {
-                    Result result = await ChannelSession.Services.PixelChat.EditSceneComponent(this.SceneID, this.ComponentID, this.SceneComponentVisible);
+                    Result result = await ServiceManager.Get<PixelChatService>().EditSceneComponent(this.SceneID, this.ComponentID, this.SceneComponentVisible);
                     if (!result.Success)
                     {
                         Logger.Log(LogLevel.Error, result.Message);
@@ -105,11 +107,11 @@ namespace MixItUp.Base.Model.Actions
                     PixelChatSendMessageModel sendMessage = null;
                     if (this.ActionType == PixelChatActionTypeEnum.TriggerShoutout || this.ActionType == PixelChatActionTypeEnum.AddUserToGiveaway)
                     {
-                        UserViewModel user = parameters.User;
+                        UserV2ViewModel user = parameters.User;
                         if (!string.IsNullOrEmpty(this.TargetUsername))
                         {
                             string targetUsername = await ReplaceStringWithSpecialModifiers(this.TargetUsername, parameters);
-                            UserViewModel targetUser = await ChannelSession.Services.User.GetUserFullSearch(parameters.Platform, userID: null, targetUsername);
+                            UserV2ViewModel targetUser = await ServiceManager.Get<UserService>().GetUserByPlatformUsername(parameters.Platform, targetUsername, performPlatformSearch: true);
                             if (targetUser != null)
                             {
                                 user = targetUser;
@@ -118,7 +120,7 @@ namespace MixItUp.Base.Model.Actions
 
                         if (this.ActionType == PixelChatActionTypeEnum.TriggerShoutout)
                         {
-                            sendMessage = new PixelChatSendMessageModel(this.ActionType.ToString(), user.Username, StreamingPlatformTypeEnum.Twitch);
+                            sendMessage = new PixelChatSendMessageModel(this.ActionType.ToString(), user.Username, user.Platform);
                         }
                         else if (this.ActionType == PixelChatActionTypeEnum.AddUserToGiveaway)
                         {
@@ -142,7 +144,7 @@ namespace MixItUp.Base.Model.Actions
                         characters[0] = Char.ToLower(characters[0]);
                         sendMessage.type = new string(characters);
 
-                        Result result = await ChannelSession.Services.PixelChat.SendMessageToOverlay(this.OverlayID, sendMessage);
+                        Result result = await ServiceManager.Get<PixelChatService>().SendMessageToOverlay(this.OverlayID, sendMessage);
                         if (!result.Success)
                         {
                             Logger.Log(LogLevel.Error, result.Message);

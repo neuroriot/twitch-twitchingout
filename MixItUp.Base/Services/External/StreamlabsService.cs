@@ -57,16 +57,7 @@ namespace MixItUp.Base.Services.External
         }
     }
 
-    public interface IStreamlabsService : IOAuthExternalService
-    {
-        Task SpinWheel();
-
-        Task EmptyJar();
-
-        Task RollCredits();
-    }
-
-    public class StreamlabsService : OAuthExternalServiceBase, IStreamlabsService
+    public class StreamlabsService : OAuthExternalServiceBase
     {
         private const string BaseAddress = "https://streamlabs.com/api/v1.0/";
 
@@ -81,7 +72,7 @@ namespace MixItUp.Base.Services.External
             this.socket = socket;
         }
 
-        public override string Name { get { return "Streamlabs"; } }
+        public override string Name { get { return MixItUp.Base.Resources.Streamlabs; } }
 
         public override async Task<Result> Connect()
         {
@@ -93,7 +84,7 @@ namespace MixItUp.Base.Services.External
                     JObject payload = new JObject();
                     payload["grant_type"] = "authorization_code";
                     payload["client_id"] = StreamlabsService.ClientID;
-                    payload["client_secret"] = ChannelSession.Services.Secrets.GetSecret("StreamlabsSecret");
+                    payload["client_secret"] = ServiceManager.Get<SecretsService>().GetSecret("StreamlabsSecret");
                     payload["code"] = authorizationCode;
                     payload["redirect_uri"] = OAuthExternalServiceBase.DEFAULT_OAUTH_LOCALHOST_URL;
 
@@ -143,7 +134,7 @@ namespace MixItUp.Base.Services.External
                 JObject payload = new JObject();
                 payload["grant_type"] = "refresh_token";
                 payload["client_id"] = StreamlabsService.ClientID;
-                payload["client_secret"] = ChannelSession.Services.Secrets.GetSecret("StreamlabsSecret");
+                payload["client_secret"] = ServiceManager.Get<SecretsService>().GetSecret("StreamlabsSecret");
                 payload["refresh_token"] = this.token.refreshToken;
                 payload["redirect_uri"] = OAuthExternalServiceBase.DEFAULT_OAUTH_LOCALHOST_URL;
 
@@ -163,7 +154,7 @@ namespace MixItUp.Base.Services.External
 
         private async void Socket_OnDisconnected(object sender, EventArgs e)
         {
-            ChannelSession.DisconnectionOccurred("Streamlabs");
+            ChannelSession.DisconnectionOccurred(MixItUp.Base.Resources.Streamlabs);
 
             do
             {
@@ -171,7 +162,7 @@ namespace MixItUp.Base.Services.External
             }
             while (!await this.ConnectSocket());
 
-            ChannelSession.ReconnectionOccurred("Streamlabs");
+            ChannelSession.ReconnectionOccurred(MixItUp.Base.Resources.Streamlabs);
         }
 
         private async Task<bool> ConnectSocket()

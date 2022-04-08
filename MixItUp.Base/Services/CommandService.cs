@@ -1,4 +1,5 @@
-﻿using MixItUp.Base.Model.Actions;
+﻿using MixItUp.Base.Model;
+using MixItUp.Base.Model.Actions;
 using MixItUp.Base.Model.Commands;
 using MixItUp.Base.Model.Commands.Games;
 using MixItUp.Base.Model.Requirements;
@@ -23,6 +24,8 @@ namespace MixItUp.Base.Services
 
     public class CommandService
     {
+        public bool IsPaused { get; private set; }
+
         public event EventHandler<CommandInstanceModel> OnCommandInstanceAdded = delegate { };
 
         public List<PreMadeChatCommandModelBase> PreMadeChatCommands { get; private set; } = new List<PreMadeChatCommandModelBase>();
@@ -34,6 +37,7 @@ namespace MixItUp.Base.Services
         public List<TwitchChannelPointsCommandModel> TwitchChannelPointsCommands { get; set; } = new List<TwitchChannelPointsCommandModel>();
         public List<StreamlootsCardCommandModel> StreamlootsCardCommands { get; set; } = new List<StreamlootsCardCommandModel>();
         public List<WebhookCommandModel> WebhookCommands { get; set; } = new List<WebhookCommandModel>();
+        public List<TrovoSpellCommandModel> TrovoSpellCommands { get; set; } = new List<TrovoSpellCommandModel>();
 
         public IEnumerable<CommandModelBase> AllEnabledChatAccessibleCommands
         {
@@ -61,9 +65,12 @@ namespace MixItUp.Base.Services
                 commands.AddRange(this.TwitchChannelPointsCommands);
                 commands.AddRange(this.StreamlootsCardCommands);
                 commands.AddRange(this.WebhookCommands);
+                commands.AddRange(this.TrovoSpellCommands);
                 return commands;
             }
         }
+
+        private List<CommandInstanceModel> pauseQueue = new List<CommandInstanceModel>();
 
         public IEnumerable<CommandInstanceModel> CommandInstances { get { return this.commandInstances.ToList(); } }
         private List<CommandInstanceModel> commandInstances = new List<CommandInstanceModel>();
@@ -104,6 +111,7 @@ namespace MixItUp.Base.Services
             this.TwitchChannelPointsCommands.Clear();
             this.StreamlootsCardCommands.Clear();
             this.WebhookCommands.Clear();
+            this.TrovoSpellCommands.Clear();
 
             foreach (CommandModelBase command in ChannelSession.Settings.Commands.Values.ToList())
             {
@@ -119,6 +127,7 @@ namespace MixItUp.Base.Services
                 else if (command is TwitchChannelPointsCommandModel) { this.TwitchChannelPointsCommands.Add((TwitchChannelPointsCommandModel)command); }
                 else if (command is StreamlootsCardCommandModel) { this.StreamlootsCardCommands.Add((StreamlootsCardCommandModel)command); }
                 else if (command is WebhookCommandModel) { this.WebhookCommands.Add((WebhookCommandModel)command); }
+                else if (command is TrovoSpellCommandModel) { this.TrovoSpellCommands.Add((TrovoSpellCommandModel)command); }
             }
 
             foreach (PreMadeChatCommandSettingsModel commandSetting in ChannelSession.Settings.PreMadeChatCommandSettings)
@@ -130,9 +139,9 @@ namespace MixItUp.Base.Services
                 }
             }
 
-            ChannelSession.Services.Chat.RebuildCommandTriggers();
+            ServiceManager.Get<ChatService>().RebuildCommandTriggers();
 
-            return Task.FromResult(0);
+            return Task.CompletedTask;
         }
 
         public async Task Queue(Guid commandID) { await this.Queue(ChannelSession.Settings.GetCommand(commandID)); }
@@ -177,69 +186,19 @@ namespace MixItUp.Base.Services
             {
                 this.commandInstances.Insert(0, commandInstance);
             }
+            this.OnCommandInstanceAdded(this, commandInstance);
 
             if (commandInstance.State == CommandInstanceStateEnum.Pending)
             {
-                CommandTypeEnum type = commandInstance.QueueCommandType;
-                if (commandInstance.DontQueue)
+                if (this.IsPaused)
                 {
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-                    AsyncRunner.RunAsync(() => this.RunDirectly(commandInstance));
-#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+                    this.pauseQueue.Add(commandInstance);
                 }
                 else
                 {
-                    await this.commandQueueLock.WaitAndRelease(() =>
-                    {
-                        if (ChannelSession.Settings.CommandServiceLockType == CommandServiceLockTypeEnum.PerCommandType)
-                        {
-                            perCommandTypeInstances[type].Add(commandInstance);
-                            if (perCommandTypeTasks[type] == null)
-                            {
-                                perCommandTypeTasks[type] = AsyncRunner.RunAsync(() => this.BackgroundCommandTypeRunner(type));
-                            }
-                        }
-                        else if (ChannelSession.Settings.CommandServiceLockType == CommandServiceLockTypeEnum.PerActionType)
-                        {
-                            this.perActionTypeInstances.Add(commandInstance);
-                            if (this.CanCommandBeRunBasedOnActions(commandInstance))
-                            {
-                                this.perActionTypeTasks.Add(AsyncRunner.RunAsync(() => this.BackgroundCommandTypeRunner(type)));
-                            }
-                        }
-                        else if (ChannelSession.Settings.CommandServiceLockType == CommandServiceLockTypeEnum.VisualAudioActions)
-                        {
-                            HashSet<ActionTypeEnum> actionTypes = commandInstance.GetActionTypes();
-                            if (actionTypes.Contains(ActionTypeEnum.Overlay) || actionTypes.Contains(ActionTypeEnum.OvrStream) || actionTypes.Contains(ActionTypeEnum.Sound) ||
-                                actionTypes.Contains(ActionTypeEnum.StreamingSoftware) || actionTypes.Contains(ActionTypeEnum.TextToSpeech))
-                            {
-                                singularInstances.Add(commandInstance);
-                                if (singularTask == null)
-                                {
-                                    singularTask = AsyncRunner.RunAsync(() => this.BackgroundCommandTypeRunner(type));
-                                }
-                            }
-                            else
-                            {
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-                                AsyncRunner.RunAsync(() => this.RunDirectly(commandInstance));
-#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-                            }
-                        }
-                        else if (ChannelSession.Settings.CommandServiceLockType == CommandServiceLockTypeEnum.Singular)
-                        {
-                            singularInstances.Add(commandInstance);
-                            if (singularTask == null)
-                            {
-                                singularTask = AsyncRunner.RunAsync(() => this.BackgroundCommandTypeRunner(type));
-                            }
-                        }
-                        return Task.FromResult(0);
-                    });
+                    await this.QueueInternal(commandInstance);
                 }
             }
-
-            this.OnCommandInstanceAdded(this, commandInstance);
         }
 
         public async Task RunDirectlyWithValidation(CommandInstanceModel commandInstance)
@@ -269,6 +228,8 @@ namespace MixItUp.Base.Services
                     commandInstance.Parameters.SpecialIdentifiers[CommandModelBase.CommandNameSpecialIdentifier] = command.Name;
 
                     command.TrackTelemetry();
+
+                    Logger.Log(LogLevel.Debug, $"Starting command performing: {command.ID} - {command.Name}");
                 }
 
                 if (commandInstance.RunnerParameters.Count == 0)
@@ -276,13 +237,11 @@ namespace MixItUp.Base.Services
                     commandInstance.RunnerParameters = new List<CommandParametersModel>() { commandInstance.Parameters };
                 }
 
-                Logger.Log(LogLevel.Debug, $"Starting command performing: {this}");
-
                 commandInstance.State = CommandInstanceStateEnum.Running;
 
                 foreach (CommandParametersModel p in commandInstance.RunnerParameters)
                 {
-                    p.User.Data.TotalCommandsRun++;
+                    p.User.TotalCommandsRun++;
                     await this.RunDirectlyInternal(commandInstance, p);
                 }
 
@@ -310,6 +269,30 @@ namespace MixItUp.Base.Services
             await this.Queue(commandInstance.Duplicate());
         }
 
+        public async Task Pause()
+        {
+            await this.commandQueueLock.WaitAndRelease(() =>
+            {
+                this.IsPaused = true;
+                return Task.CompletedTask;
+            });
+        }
+
+        public async Task Unpause()
+        {
+            await this.commandQueueLock.WaitAndRelease(() =>
+            {
+                this.IsPaused = false;
+                return Task.CompletedTask;
+            });
+
+            foreach (CommandInstanceModel commandInstance in this.pauseQueue)
+            {
+                await this.QueueInternal(commandInstance);
+            }
+            this.pauseQueue.Clear();
+        }
+
         private async Task<Result> ValidateCommand(CommandInstanceModel commandInstance)
         {
             Result validationResult = new Result();
@@ -319,10 +302,13 @@ namespace MixItUp.Base.Services
                 validationResult = await command.CustomValidation(commandInstance.Parameters);
                 if (validationResult.Success)
                 {
-                    validationResult = await command.ValidateRequirements(commandInstance.Parameters);
-                    if (!validationResult.Success && ChannelSession.Settings.RequirementErrorsCooldownType != RequirementErrorCooldownTypeEnum.PerCommand)
+                    if (!commandInstance.Parameters.IgnoreRequirements)
                     {
-                        command.CommandErrorCooldown = RequirementModelBase.UpdateErrorCooldown();
+                        validationResult = await command.ValidateRequirements(commandInstance.Parameters);
+                        if (!validationResult.Success && ChannelSession.Settings.RequirementErrorsCooldownType != RequirementErrorCooldownTypeEnum.PerCommand)
+                        {
+                            command.CommandErrorCooldown = RequirementModelBase.UpdateErrorCooldown();
+                        }
                     }
                 }
                 else
@@ -331,14 +317,14 @@ namespace MixItUp.Base.Services
                     {
                         if (!string.IsNullOrEmpty(validationResult.Message) && validationResult.DisplayMessage)
                         {
-                            await ChannelSession.Services.Chat.SendMessage(validationResult.Message);
+                            await ServiceManager.Get<ChatService>().SendMessage(validationResult.Message, commandInstance.Parameters.Platform);
                         }
                     }
                 }
 
                 if (validationResult.Success)
                 {
-                    if (command.Requirements != null)
+                    if (command.Requirements != null && !commandInstance.Parameters.IgnoreRequirements)
                     {
                         await command.PerformRequirements(commandInstance.Parameters);
                         commandInstance.RunnerParameters = new List<CommandParametersModel>(command.GetPerformingUsers(commandInstance.Parameters));
@@ -358,6 +344,67 @@ namespace MixItUp.Base.Services
                 }
             }
             return validationResult;
+        }
+
+        private async Task QueueInternal(CommandInstanceModel commandInstance)
+        {
+            CommandTypeEnum type = commandInstance.QueueCommandType;
+            if (commandInstance.DontQueue)
+            {
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+                AsyncRunner.RunAsync(() => this.RunDirectly(commandInstance));
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+            }
+            else
+            {
+                await this.commandQueueLock.WaitAndRelease(() =>
+                {
+                    if (ChannelSession.Settings.CommandServiceLockType == CommandServiceLockTypeEnum.PerCommandType)
+                    {
+                        perCommandTypeInstances[type].Add(commandInstance);
+                        if (perCommandTypeTasks[type] == null)
+                        {
+                            perCommandTypeTasks[type] = AsyncRunner.RunAsync(() => this.BackgroundCommandTypeRunner(type));
+                        }
+                    }
+                    else if (ChannelSession.Settings.CommandServiceLockType == CommandServiceLockTypeEnum.PerActionType)
+                    {
+                        this.perActionTypeInstances.Add(commandInstance);
+                        if (this.CanCommandBeRunBasedOnActions(commandInstance))
+                        {
+                            this.perActionTypeTasks.Add(AsyncRunner.RunAsync(() => this.BackgroundCommandTypeRunner(type)));
+                        }
+                    }
+                    else if (ChannelSession.Settings.CommandServiceLockType == CommandServiceLockTypeEnum.VisualAudioActions)
+                    {
+                        HashSet<ActionTypeEnum> actionTypes = commandInstance.GetActionTypes();
+                        if (actionTypes.Contains(ActionTypeEnum.Overlay) || actionTypes.Contains(ActionTypeEnum.OvrStream) || actionTypes.Contains(ActionTypeEnum.PolyPop) ||
+                            actionTypes.Contains(ActionTypeEnum.Sound) || actionTypes.Contains(ActionTypeEnum.StreamingSoftware) || actionTypes.Contains(ActionTypeEnum.TextToSpeech))
+                        {
+                            singularInstances.Add(commandInstance);
+                            if (singularTask == null)
+                            {
+                                singularTask = AsyncRunner.RunAsync(() => this.BackgroundCommandTypeRunner(type));
+                            }
+                        }
+                        else
+                        {
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+                            AsyncRunner.RunAsync(() => this.RunDirectly(commandInstance));
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+                        }
+                    }
+                    else if (ChannelSession.Settings.CommandServiceLockType == CommandServiceLockTypeEnum.Singular)
+                    {
+                        singularInstances.Add(commandInstance);
+                        if (singularTask == null)
+                        {
+                            singularTask = AsyncRunner.RunAsync(() => this.BackgroundCommandTypeRunner(type));
+                        }
+                    }
+                    return Task.CompletedTask;
+                });
+            }
         }
 
         private async Task BackgroundCommandTypeRunner(CommandTypeEnum type)
@@ -416,7 +463,14 @@ namespace MixItUp.Base.Services
 
                 if (instance != null && instance.State == CommandInstanceStateEnum.Pending)
                 {
-                    await this.RunDirectly(instance);
+                    if (this.IsPaused)
+                    {
+                        this.pauseQueue.Add(instance);
+                    }
+                    else
+                    {
+                        await this.RunDirectly(instance);
+                    }
                 }
 
             } while (instance != null);
@@ -427,6 +481,11 @@ namespace MixItUp.Base.Services
             CommandModelBase command = commandInstance.Command;
             if (command != null)
             {
+                if (parameters.InitialCommandID == Guid.Empty)
+                {
+                    parameters.InitialCommandID = command.ID;
+                }
+
                 await command.PreRun(parameters);
             }
 
@@ -445,18 +504,18 @@ namespace MixItUp.Base.Services
                     }
 
                     ActionModelBase action = actions[i];
-                    if (action is OverlayActionModel && ChannelSession.Services.Overlay.IsConnected)
+                    if (action is OverlayActionModel && ServiceManager.Get<OverlayService>().IsConnected)
                     {
-                        ChannelSession.Services.Overlay.StartBatching();
+                        ServiceManager.Get<OverlayService>().StartBatching();
                     }
 
                     await action.Perform(parameters);
 
-                    if (action is OverlayActionModel && ChannelSession.Services.Overlay.IsConnected)
+                    if (action is OverlayActionModel && ServiceManager.Get<OverlayService>().IsConnected)
                     {
                         if (i == (actions.Count - 1) || !(actions[i + 1] is OverlayActionModel))
                         {
-                            await ChannelSession.Services.Overlay.EndBatching();
+                            await ServiceManager.Get<OverlayService>().EndBatching();
                         }
                     }
                 }

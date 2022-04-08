@@ -1,4 +1,5 @@
-﻿using MixItUp.Base.Util;
+﻿using MixItUp.Base.Services;
+using MixItUp.Base.Util;
 using MixItUp.Base.ViewModel.User;
 using Newtonsoft.Json;
 using System;
@@ -57,9 +58,9 @@ namespace MixItUp.Base.Model.Commands.Games
         [JsonIgnore]
         private int runBetAmount;
         [JsonIgnore]
-        private Dictionary<UserViewModel, CommandParametersModel> runUsers = new Dictionary<UserViewModel, CommandParametersModel>();
+        private Dictionary<UserV2ViewModel, CommandParametersModel> runUsers = new Dictionary<UserV2ViewModel, CommandParametersModel>();
         [JsonIgnore]
-        private Dictionary<UserViewModel, WinLosePlayerType> runUserTypes = new Dictionary<UserViewModel, WinLosePlayerType>();
+        private Dictionary<UserV2ViewModel, WinLosePlayerType> runUserTypes = new Dictionary<UserV2ViewModel, WinLosePlayerType>();
 
         public TreasureDefenseGameCommandModel(string name, HashSet<string> triggers, int minimumParticipants, int timeLimit, int kingTimeLimit, int thiefPlayerPercentage, CustomCommandModel startedCommand,
             CustomCommandModel userJoinCommand, CustomCommandModel notEnoughPlayersCommand, CustomCommandModel knightUserCommand, CustomCommandModel thiefUserCommand, CustomCommandModel kingUserCommand,
@@ -80,26 +81,8 @@ namespace MixItUp.Base.Model.Commands.Games
             this.ThiefSelectedCommand = thiefSelectedCommand;
         }
 
-#pragma warning disable CS0612 // Type or member is obsolete
-        internal TreasureDefenseGameCommandModel(Base.Commands.TreasureDefenseGameCommand command)
-            : base(command, GameCommandTypeEnum.TreasureDefense)
-        {
-            this.MinimumParticipants = command.MinimumParticipants;
-            this.TimeLimit = command.TimeLimit;
-            this.KingTimeLimit = 300;
-            this.StartedCommand = new CustomCommandModel(command.StartedCommand) { IsEmbedded = true };
-            this.UserJoinCommand = new CustomCommandModel(command.UserJoinCommand) { IsEmbedded = true };
-            this.NotEnoughPlayersCommand = new CustomCommandModel(command.NotEnoughPlayersCommand) { IsEmbedded = true };
-            this.ThiefPlayerPercentage = command.ThiefPlayerPercentage;
-            this.KnightUserCommand = new CustomCommandModel(command.KnightUserCommand) { IsEmbedded = true };
-            this.ThiefUserCommand = new CustomCommandModel(command.ThiefUserCommand) { IsEmbedded = true };
-            this.KingUserCommand = new CustomCommandModel(command.KingUserCommand) { IsEmbedded = true };
-            this.KnightSelectedCommand = new CustomCommandModel(command.KnightSelectedCommand) { IsEmbedded = true };
-            this.ThiefSelectedCommand = new CustomCommandModel(command.ThiefSelectedCommand) { IsEmbedded = true };
-        }
-#pragma warning restore CS0612 // Type or member is obsolete
-
-        private TreasureDefenseGameCommandModel() { }
+        [Obsolete]
+        public TreasureDefenseGameCommandModel() : base() { }
 
         public override IEnumerable<CommandModelBase> GetInnerCommands()
         {
@@ -164,9 +147,9 @@ namespace MixItUp.Base.Model.Commands.Games
                         {
                             await this.RunSubCommand(this.ThiefUserCommand, participant);
                         }
-                        else if (this.runUserTypes[participant.User] == WinLosePlayerType.Thief)
+                        else if (this.runUserTypes[participant.User] == WinLosePlayerType.Knight)
                         {
-                            await this.RunSubCommand(this.ThiefUserCommand, participant);
+                            await this.RunSubCommand(this.KnightUserCommand, participant);
                         }
                     }
                     await this.RunSubCommand(this.KingUserCommand, shuffledParticipants.ElementAt(0));
@@ -223,7 +206,7 @@ namespace MixItUp.Base.Model.Commands.Games
                     }
                     else
                     {
-                        await ChannelSession.Services.Chat.SendMessage(MixItUp.Base.Resources.GameCommandCouldNotFindUser);
+                        await ServiceManager.Get<ChatService>().SendMessage(MixItUp.Base.Resources.GameCommandCouldNotFindUser, parameters.Platform);
                     }
                 }
                 else if (!this.runUsers.ContainsKey(parameters.User))
@@ -235,7 +218,7 @@ namespace MixItUp.Base.Model.Commands.Games
             }
             else
             {
-                await ChannelSession.Services.Chat.SendMessage(MixItUp.Base.Resources.GameCommandAlreadyUnderway);
+                await ServiceManager.Get<ChatService>().SendMessage(MixItUp.Base.Resources.GameCommandAlreadyUnderway, parameters.Platform);
             }
             await this.Requirements.Refund(parameters);
         }

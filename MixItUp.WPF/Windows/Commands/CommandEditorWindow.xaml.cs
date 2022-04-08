@@ -76,6 +76,10 @@ namespace MixItUp.WPF.Windows.Commands
                     this.editorDetailsControl = new WebhookCommandEditorDetailsControl();
                     this.viewModel = new WebhookCommandEditorWindowViewModel((WebhookCommandModel)existingCommand);
                     break;
+                case CommandTypeEnum.TrovoSpell:
+                    this.editorDetailsControl = new TrovoSpellCommandEditorDetailsControl();
+                    this.viewModel = new TrovoSpellCommandEditorWindowViewModel((TrovoSpellCommandModel)existingCommand);
+                    break;
                 case CommandTypeEnum.Custom:
                     this.editorDetailsControl = new CustomCommandEditorDetailsControl();
                     this.viewModel = new CustomCommandEditorWindowViewModel((CustomCommandModel)existingCommand);
@@ -118,6 +122,10 @@ namespace MixItUp.WPF.Windows.Commands
                 case CommandTypeEnum.StreamlootsCard:
                     this.editorDetailsControl = new StreamlootsCardCommandEditorDetailsControl();
                     this.viewModel = new StreamlootsCardCommandEditorWindowViewModel();
+                    break;
+                case CommandTypeEnum.TrovoSpell:
+                    this.editorDetailsControl = new TrovoSpellCommandEditorDetailsControl();
+                    this.viewModel = new TrovoSpellCommandEditorWindowViewModel();
                     break;
                 case CommandTypeEnum.Custom:
                     this.editorDetailsControl = new CustomCommandEditorDetailsControl();
@@ -184,7 +192,7 @@ namespace MixItUp.WPF.Windows.Commands
         protected override async Task OnLoaded()
         {
             this.viewModel.CommandSaved += ViewModel_CommandSaved;
-            await this.viewModel.OnLoaded();
+            await this.viewModel.OnOpen();
 
             if (this.importedActions != null)
             {

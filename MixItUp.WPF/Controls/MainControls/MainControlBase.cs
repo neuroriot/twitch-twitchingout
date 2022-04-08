@@ -1,4 +1,5 @@
 ﻿using MixItUp.Base;
+using MixItUp.Base.Services;
 using MixItUp.Base.Util;
 using MixItUp.WPF.Windows;
 using System.ComponentModel;
@@ -39,24 +40,15 @@ namespace MixItUp.WPF.Controls.MainControls
             e.Handled = true;
         }
 
-        protected virtual Task InitializeInternal() { return Task.FromResult(0); }
+        protected virtual Task InitializeInternal() { return Task.CompletedTask; }
 
-        protected virtual Task OnVisibilityChanged() { return Task.FromResult(0); }
+        protected virtual Task OnVisibilityChanged() { return Task.CompletedTask; }
 
         private async void MainControlBase_IsVisibleChanged(object sender, System.Windows.DependencyPropertyChangedEventArgs e)
         {
             if (DesignerProperties.GetIsInDesignMode(new DependencyObject()))
             {
                 return;
-            }
-
-            if ((bool)e.NewValue)
-            {
-                string typeName = this.GetType().FullName;
-                if (!IgnoredPages.Contains(typeName) && ChannelSession.Services?.Telemetry != null)
-                {
-                    ChannelSession.Services.Telemetry.TrackPageView(typeName);
-                }
             }
 
             if (this.Window != null)

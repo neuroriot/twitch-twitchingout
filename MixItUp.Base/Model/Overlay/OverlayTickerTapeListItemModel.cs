@@ -1,6 +1,6 @@
 ﻿using MixItUp.Base.Model.Commands;
 using MixItUp.Base.Model.User;
-using MixItUp.Base.Model.User.Twitch;
+using MixItUp.Base.Services.Twitch;
 using MixItUp.Base.Util;
 using MixItUp.Base.ViewModel.User;
 using Newtonsoft.Json;
@@ -14,16 +14,13 @@ namespace MixItUp.Base.Model.Overlay
 {
     public enum OverlayTickerTapeItemTypeEnum
     {
-        Followers,
-        Hosts,
-        Subscribers,
-        Donations,
-        [Obsolete]
-        Sparks,
-        [Obsolete]
-        Embers,
-        Bits,
-        Raids
+        Followers = 0,
+        Hosts = 1,
+        Subscribers = 2,
+        Donations = 3,
+
+        Bits = 6,
+        Raids = 7,
     }
 
     [DataContract]
@@ -122,54 +119,54 @@ namespace MixItUp.Base.Model.Overlay
             return replacementSets;
         }
 
-        private async void GlobalEvents_OnFollowOccurred(object sender, UserViewModel user)
+        private async void GlobalEvents_OnFollowOccurred(object sender, UserV2ViewModel user)
         {
             if (!this.follows.Contains(user.ID))
             {
                 this.follows.Add(user.ID);
-                await this.AddEvent(user.FullDisplayName);
+                await this.AddEvent(user.DisplayName);
             }
         }
 
-        private async void GlobalEvents_OnHostOccurred(object sender, UserViewModel host)
+        private async void GlobalEvents_OnHostOccurred(object sender, UserV2ViewModel host)
         {
             if (!this.hosts.Contains(host.ID))
             {
                 this.hosts.Add(host.ID);
-                await this.AddEvent(host.FullDisplayName);
+                await this.AddEvent(host.DisplayName);
             }
         }
 
-        private async void GlobalEvents_OnRaidOccurred(object sender, Tuple<UserViewModel, int> raid)
+        private async void GlobalEvents_OnRaidOccurred(object sender, Tuple<UserV2ViewModel, int> raid)
         {
             if (!this.raids.Contains(raid.Item1.ID))
             {
                 this.raids.Add(raid.Item1.ID);
-                await this.AddEvent(raid.Item1.FullDisplayName + " x" + raid.Item2);
+                await this.AddEvent(raid.Item1.DisplayName + " x" + raid.Item2);
             }
         }
 
-        private async void GlobalEvents_OnSubscribeOccurred(object sender, UserViewModel user)
+        private async void GlobalEvents_OnSubscribeOccurred(object sender, UserV2ViewModel user)
         {
             if (!this.subs.Contains(user.ID))
             {
                 this.subs.Add(user.ID);
-                await this.AddEvent(user.FullDisplayName);
+                await this.AddEvent(user.DisplayName);
             }
         }
 
-        private async void GlobalEvents_OnResubscribeOccurred(object sender, Tuple<UserViewModel, int> user)
+        private async void GlobalEvents_OnResubscribeOccurred(object sender, Tuple<UserV2ViewModel, int> user)
         {
             if (!this.subs.Contains(user.Item1.ID))
             {
                 this.subs.Add(user.Item1.ID);
-                await this.AddEvent(user.Item1.FullDisplayName + " x" + user.Item2);
+                await this.AddEvent(user.Item1.DisplayName + " x" + user.Item2);
             }
         }
 
-        private async void GlobalEvents_OnSubscriptionGiftedOccurred(object sender, Tuple<UserViewModel, UserViewModel> e)
+        private async void GlobalEvents_OnSubscriptionGiftedOccurred(object sender, Tuple<UserV2ViewModel, UserV2ViewModel> e)
         {
-            await this.AddEvent(e.Item2.FullDisplayName);
+            await this.AddEvent(e.Item2.DisplayName);
         }
 
         private async void GlobalEvents_OnDonationOccurred(object sender, UserDonationModel donation)
@@ -184,7 +181,7 @@ namespace MixItUp.Base.Model.Overlay
         {
             if (this.MinimumAmountRequiredToShow == 0.0 || e.Amount >= this.MinimumAmountRequiredToShow)
             {
-                await this.AddEvent(e.User.FullDisplayName + ": " + e.Amount);
+                await this.AddEvent(e.User.DisplayName + ": " + e.Amount);
             }
         }
 
@@ -197,7 +194,7 @@ namespace MixItUp.Base.Model.Overlay
             {
                 this.Items.Add(item);
                 this.SendUpdateRequired();
-                return Task.FromResult(0);
+                return Task.CompletedTask;
             });
         }
     }

@@ -1,4 +1,9 @@
 ﻿using MixItUp.Base.Model.Commands;
+using MixItUp.Base.Services;
+using MixItUp.Base.Services.Glimesh;
+using MixItUp.Base.Services.Trovo;
+using MixItUp.Base.Services.Twitch;
+using MixItUp.Base.Services.YouTube;
 using Newtonsoft.Json.Linq;
 using StreamingClient.Base.Util;
 using StreamingClient.Base.Web;
@@ -46,38 +51,29 @@ namespace MixItUp.Base.Model.Actions
             this.JSONToSpecialIdentifiers = jsonToSpecialIdentifiers;
         }
 
-#pragma warning disable CS0612 // Type or member is obsolete
-        internal WebRequestActionModel(MixItUp.Base.Actions.WebRequestAction action)
-            : base(ActionTypeEnum.WebRequest)
-        {
-            this.Url = action.Url;
-            if (action.ResponseAction == Base.Actions.WebRequestResponseActionTypeEnum.JSONToSpecialIdentifiers)
-            {
-                this.ResponseType = WebRequestResponseParseTypeEnum.JSONToSpecialIdentifiers;
-                this.JSONToSpecialIdentifiers = action.JSONToSpecialIdentifiers;
-            }
-            else
-            {
-                this.ResponseType = WebRequestResponseParseTypeEnum.PlainText;
-            }
-        }
-#pragma warning restore CS0612 // Type or member is obsolete
-
-        private WebRequestActionModel() { }
+        [Obsolete]
+        public WebRequestActionModel() { }
 
         protected override async Task PerformInternal(CommandParametersModel parameters)
         {
-            if (ChannelSession.Services.FileService.FileExists(this.Url))
+            string url = await ReplaceStringWithSpecialModifiers(this.Url, parameters);
+            if (ServiceManager.Get<IFileService>().FileExists(url))
             {
-                await this.ProcessContents(parameters, await ChannelSession.Services.FileService.ReadFile(this.Url));
+                await this.ProcessContents(parameters, await ServiceManager.Get<IFileService>().ReadFile(url));
             }
             else
             {
                 using (AdvancedHttpClient httpClient = new AdvancedHttpClient())
                 {
                     httpClient.DefaultRequestHeaders.Add("User-Agent", $"MixItUp/{Assembly.GetEntryAssembly().GetName().Version.ToString()} (Web call from Mix It Up; https://mixitupapp.com; support@mixitupapp.com)");
-                    httpClient.DefaultRequestHeaders.Add("Twitch-UserID", (ChannelSession.TwitchUserNewAPI != null) ? ChannelSession.TwitchUserNewAPI.id : string.Empty);
-                    httpClient.DefaultRequestHeaders.Add("Twitch-UserLogin", (ChannelSession.TwitchUserNewAPI != null) ? ChannelSession.TwitchUserNewAPI.login : string.Empty);
+                    httpClient.DefaultRequestHeaders.Add("Twitch-UserID", ServiceManager.Get<TwitchSessionService>()?.UserID ?? string.Empty);
+                    httpClient.DefaultRequestHeaders.Add("Twitch-UserLogin", ServiceManager.Get<TwitchSessionService>().Username ?? string.Empty);
+                    httpClient.DefaultRequestHeaders.Add("Glimesh-UserID", ServiceManager.Get<GlimeshSessionService>()?.UserID ?? string.Empty);
+                    httpClient.DefaultRequestHeaders.Add("Glimesh-UserLogin", ServiceManager.Get<GlimeshSessionService>().Username ?? string.Empty);
+                    httpClient.DefaultRequestHeaders.Add("YouTube-UserID", ServiceManager.Get<YouTubeSessionService>()?.UserID ?? string.Empty);
+                    httpClient.DefaultRequestHeaders.Add("YouTube-UserLogin", ServiceManager.Get<YouTubeSessionService>().Username ?? string.Empty);
+                    httpClient.DefaultRequestHeaders.Add("Trovo-UserID", ServiceManager.Get<TrovoSessionService>()?.UserID ?? string.Empty);
+                    httpClient.DefaultRequestHeaders.Add("Trovo-UserLogin", ServiceManager.Get<TrovoSessionService>().Username ?? string.Empty);
 
                     using (HttpResponseMessage response = await httpClient.GetAsync(await ReplaceStringWithSpecialModifiers(this.Url, parameters, encode: true)))
                     {

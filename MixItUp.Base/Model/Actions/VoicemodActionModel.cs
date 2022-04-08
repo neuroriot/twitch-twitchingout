@@ -1,6 +1,8 @@
 ﻿using MixItUp.Base.Model.Commands;
+using MixItUp.Base.Services;
 using MixItUp.Base.Services.External;
 using MixItUp.Base.Util;
+using System;
 using System.Runtime.Serialization;
 using System.Threading.Tasks;
 
@@ -14,6 +16,7 @@ namespace MixItUp.Base.Model.Actions
         BeepSoundOnOff,
         PlaySound,
         StopAllSounds,
+        HearMyselfOnOff,
     }
 
     [DataContract]
@@ -30,6 +33,8 @@ namespace MixItUp.Base.Model.Actions
         public static VoicemodActionModel CreateForPlaySound(string soundFileName) { return new VoicemodActionModel(VoicemodActionTypeEnum.PlaySound) { SoundFileName = soundFileName }; }
 
         public static VoicemodActionModel CreateForStopAllSounds() { return new VoicemodActionModel(VoicemodActionTypeEnum.StopAllSounds); }
+
+        public static VoicemodActionModel CreateForHearMyselfOnOff(bool state) { return new VoicemodActionModel(VoicemodActionTypeEnum.HearMyselfOnOff) { State = state }; }
 
         [DataMember]
         public VoicemodActionTypeEnum ActionType { get; set; }
@@ -52,44 +57,49 @@ namespace MixItUp.Base.Model.Actions
             this.ActionType = actionType;
         }
 
-        private VoicemodActionModel() { }
+        [Obsolete]
+        public VoicemodActionModel() { }
 
         protected override async Task PerformInternal(CommandParametersModel parameters)
         {
-            if (ChannelSession.Settings.EnableVoicemodStudio && !ChannelSession.Services.Voicemod.IsConnected)
+            if (ChannelSession.Settings.EnableVoicemodStudio && !ServiceManager.Get<IVoicemodService>().IsConnected)
             {
-                Result result = await ChannelSession.Services.Voicemod.Connect();
+                Result result = await ServiceManager.Get<IVoicemodService>().Connect();
                 if (!result.Success)
                 {
                     return;
                 }
             }
 
-            if (ChannelSession.Services.Voicemod.IsConnected)
+            if (ServiceManager.Get<IVoicemodService>().IsConnected)
             {
                 if (this.ActionType == VoicemodActionTypeEnum.VoiceChangerOnOff)
                 {
-                    await ChannelSession.Services.Voicemod.VoiceChangerOnOff(this.State);
+                    await ServiceManager.Get<IVoicemodService>().VoiceChangerOnOff(this.State);
                 }
                 else if (this.ActionType == VoicemodActionTypeEnum.SelectVoice)
                 {
-                    await ChannelSession.Services.Voicemod.SelectVoice(this.VoiceID);
+                    await ServiceManager.Get<IVoicemodService>().SelectVoice(this.VoiceID);
                 }
                 else if (this.ActionType == VoicemodActionTypeEnum.RandomVoice)
                 {
-                    await ChannelSession.Services.Voicemod.RandomVoice(this.RandomVoiceType);
+                    await ServiceManager.Get<IVoicemodService>().RandomVoice(this.RandomVoiceType);
                 }
                 else if (this.ActionType == VoicemodActionTypeEnum.BeepSoundOnOff)
                 {
-                    await ChannelSession.Services.Voicemod.BeepSoundOnOff(this.State);
+                    await ServiceManager.Get<IVoicemodService>().BeepSoundOnOff(this.State);
                 }
                 else if (this.ActionType == VoicemodActionTypeEnum.PlaySound)
                 {
-                    await ChannelSession.Services.Voicemod.PlayMemeSound(this.SoundFileName);
+                    await ServiceManager.Get<IVoicemodService>().PlayMemeSound(this.SoundFileName);
                 }
                 else if (this.ActionType == VoicemodActionTypeEnum.StopAllSounds)
                 {
-                    await ChannelSession.Services.Voicemod.StopAllMemeSounds();
+                    await ServiceManager.Get<IVoicemodService>().StopAllMemeSounds();
+                }
+                else if (this.ActionType == VoicemodActionTypeEnum.HearMyselfOnOff)
+                {
+                    await ServiceManager.Get<IVoicemodService>().HearMyselfOnOff(this.State);
                 }
             }
         }

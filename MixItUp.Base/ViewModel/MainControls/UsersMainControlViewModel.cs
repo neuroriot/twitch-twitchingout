@@ -1,14 +1,16 @@
 ﻿using MixItUp.Base.Model;
 using MixItUp.Base.Model.Currency;
 using MixItUp.Base.Model.User;
+using MixItUp.Base.Model.User.Platform;
+using MixItUp.Base.Services;
 using MixItUp.Base.Util;
+using MixItUp.Base.ViewModel.User;
 using MixItUp.Base.ViewModels;
 using StreamingClient.Base.Util;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
@@ -21,6 +23,7 @@ namespace MixItUp.Base.ViewModel.MainControls
         WatchTime,
         Consumables,
         CustomSettings,
+        LastSeen,
     }
 
     public class ConsumableSearchFilterViewModel : UIViewModelBase
@@ -112,13 +115,14 @@ namespace MixItUp.Base.ViewModel.MainControls
                 this.NotifyPropertyChanged("IsWatchTimeSearchFilterType");
                 this.NotifyPropertyChanged("IsConsumablesSearchFilterType");
                 this.NotifyPropertyChanged("IsCustomSettingsSearchFilterType");
+                this.NotifyPropertyChanged("IsLastSeenSearchFilterType");
             }
         }
         private UserSearchFilterTypeEnum selectedSearchFilterType = UserSearchFilterTypeEnum.None;
 
         public bool IsRoleSearchFilterType { get { return this.SelectedSearchFilterType == UserSearchFilterTypeEnum.Role; } }
 
-        public IEnumerable<UserRoleEnum> UserRoleSearchFilters { get { return UserDataModel.GetSelectableUserRoles(); } }
+        public IEnumerable<UserRoleEnum> UserRoleSearchFilters { get { return UserRoles.All; } }
 
         public UserRoleEnum SelectedUserRoleSearchFilter
         {
@@ -224,7 +228,33 @@ namespace MixItUp.Base.ViewModel.MainControls
 
         public bool IsCustomSettingsSearchFilterType { get { return this.SelectedSearchFilterType == UserSearchFilterTypeEnum.CustomSettings; } }
 
-        public ThreadSafeObservableCollection<UserDataModel> Users { get; private set; } = new ThreadSafeObservableCollection<UserDataModel>();
+        public bool IsLastSeenSearchFilterType { get { return this.SelectedSearchFilterType == UserSearchFilterTypeEnum.LastSeen; } }
+
+        public IEnumerable<string> LastSeenComparisonSearchFilters { get { return new List<string>() { GreaterThanAmountFilter, EqualToAmountFilter, LessThanAmountFilter }; } }
+
+        public string SelectedLastSeenComparisonSearchFilter
+        {
+            get { return this.selectedLastSeenComparisonSearchFilter; }
+            set
+            {
+                this.selectedLastSeenComparisonSearchFilter = value;
+                this.NotifyPropertyChanged();
+            }
+        }
+        private string selectedLastSeenComparisonSearchFilter = GreaterThanAmountFilter;
+
+        public int LastSeenAmountSearchFilter
+        {
+            get { return this.lastSeenAmountSearchFilter; }
+            set
+            {
+                this.lastSeenAmountSearchFilter = value;
+                this.NotifyPropertyChanged();
+            }
+        }
+        private int lastSeenAmountSearchFilter = 0;
+
+        public ThreadSafeObservableCollection<UserV2ViewModel> Users { get; private set; } = new ThreadSafeObservableCollection<UserV2ViewModel>();
 
         public int SortColumnIndex
         {
@@ -249,12 +279,16 @@ namespace MixItUp.Base.ViewModel.MainControls
         {
             this.ExportDataCommand = this.CreateCommand(async () =>
             {
-                string filePath = ChannelSession.Services.FileService.ShowSaveFileDialog("User Data.txt");
+                string filePath = ServiceManager.Get<IFileService>().ShowSaveFileDialog("User Data.txt", MixItUp.Base.Resources.TextFileFormatFilter);
                 if (!string.IsNullOrEmpty(filePath))
                 {
                     List<List<string>> contents = new List<List<string>>();
 
-                    List<string> columns = new List<string>() { "MixItUpID", "TwitchID", "Username", "PrimaryRole", "ViewingMinutes", "OfflineViewingMinutes", "CustomTitle" };
+                    List<string> columns = new List<string>() { "MixItUpID" };
+                    StreamingPlatforms.ForEachPlatform(p =>
+                    {
+                        columns.AddRange(new List<string>() { p.ToString() + "ID", p.ToString() + "Username" });
+                    });
                     foreach (var kvp in ChannelSession.Settings.Currency)
                     {
                         columns.Add(kvp.Value.Name.Replace(" ", ""));
@@ -263,15 +297,28 @@ namespace MixItUp.Base.ViewModel.MainControls
                     {
                         columns.Add(kvp.Value.Name.Replace(" ", ""));
                     }
-                    columns.AddRange(new List<string>() { "TotalStreamsWatched", "TotalAmountDonated", "TotalSubsGifted", "TotalSubsReceived", "TotalChatMessagesSent", "TotalTimesTagged",
+                    columns.AddRange(new List<string>() { "Minutes", "CustomTitle", "TotalStreamsWatched", "TotalAmountDonated", "TotalSubsGifted", "TotalSubsReceived", "TotalChatMessagesSent", "TotalTimesTagged",
                         "TotalCommandsRun", "TotalMonthsSubbed", "LastSeen" });
                     contents.Add(columns);
 
-                    await ChannelSession.Settings.LoadAllUserData();
-                    foreach (UserDataModel user in ChannelSession.Settings.UserData.Values.ToList())
+                    await ServiceManager.Get<UserService>().LoadAllUserData();
+                    foreach (UserV2Model u in ChannelSession.Settings.Users.Values.ToList())
                     {
-                        List<string> data = new List<string>() { user.ID.ToString(), user.TwitchID, user.Username, user.PrimaryRole.ToString(),
-                            user.ViewingMinutes.ToString(), user.OfflineViewingMinutes.ToString(), user.CustomTitle };
+                        UserV2ViewModel user = new UserV2ViewModel(u);
+
+                        List<string> data = new List<string>() { user.ID.ToString() };
+                        StreamingPlatforms.ForEachPlatform(p =>
+                        {
+                            UserPlatformV2ModelBase platformUser = user.GetPlatformData<UserPlatformV2ModelBase>(p);
+                            if (platformUser != null)
+                            {
+                                data.AddRange(new List<string>() { platformUser.ID, platformUser.Username });
+                            }
+                            else
+                            {
+                                data.AddRange(new List<string>() { "", "" });
+                            }
+                        });
                         foreach (var kvp in ChannelSession.Settings.Currency)
                         {
                             data.Add(kvp.Value.GetAmount(user).ToString());
@@ -280,8 +327,8 @@ namespace MixItUp.Base.ViewModel.MainControls
                         {
                             data.Add(kvp.Value.GetAmount(user).ToString());
                         }
-                        data.AddRange(new List<string>() { user.TotalStreamsWatched.ToString(), user.TotalAmountDonated.ToString(), user.TotalSubsGifted.ToString(), user.TotalSubsReceived.ToString(),
-                            user.TotalChatMessageSent.ToString(), user.TotalTimesTagged.ToString(), user.TotalCommandsRun.ToString(), user.TotalMonthsSubbed.ToString(), user.LastSeen.ToFriendlyDateTimeString() });
+                        data.AddRange(new List<string>() { user.OnlineViewingMinutes.ToString(), user.CustomTitle, user.TotalStreamsWatched.ToString(), user.TotalAmountDonated.ToString(), user.TotalSubsGifted.ToString(), user.TotalSubsReceived.ToString(),
+                            user.TotalChatMessageSent.ToString(), user.TotalTimesTagged.ToString(), user.TotalCommandsRun.ToString(), user.TotalMonthsSubbed.ToString(), user.LastActivity.ToFriendlyDateTimeString() });
                         contents.Add(data);
                     }
 
@@ -318,105 +365,133 @@ namespace MixItUp.Base.ViewModel.MainControls
 
                 try
                 {
-                    await ChannelSession.Settings.LoadAllUserData();
+                    await ServiceManager.Get<UserService>().LoadAllUserData();
 
-                    IEnumerable<UserDataModel> data = ChannelSession.Settings.UserData.Values.ToList();
-                    if (!string.IsNullOrEmpty(this.UsernameFilter))
+                    IEnumerable<UserV2Model> data = ChannelSession.Settings.Users.Values.ToList();
+                    if (data.Count() > 0)
                     {
-                        string filter = this.UsernameFilter.ToLower();
-                        if (this.SelectedPlatform != StreamingPlatformTypeEnum.All)
+                        if (!string.IsNullOrEmpty(this.UsernameFilter))
                         {
-                            data = data.Where(u => u.Platform.HasFlag(this.SelectedPlatform) && u.Username != null && u.Username.Contains(filter, StringComparison.OrdinalIgnoreCase));
+                            string filter = this.UsernameFilter.ToLower();
+                            if (this.SelectedPlatform != StreamingPlatformTypeEnum.All)
+                            {
+                                data = data.Where(u => u.GetPlatformUsername(this.SelectedPlatform) != null &&
+                                    (u.GetPlatformUsername(this.SelectedPlatform).Contains(filter, StringComparison.OrdinalIgnoreCase) ||
+                                    u.GetPlatformDisplayName(this.SelectedPlatform).Contains(filter, StringComparison.OrdinalIgnoreCase)));
+                            }
+                            else
+                            {
+                                data = data.Where(u => u.GetAllPlatformUsernames().Any(username => (username != null) ? username.Contains(filter, StringComparison.OrdinalIgnoreCase) : false) ||
+                                    u.GetAllPlatformDisplayNames().Any(username => (username != null) ? username.Contains(filter, StringComparison.OrdinalIgnoreCase) : false));
+                            }
                         }
-                        else
+
+                        if (this.SelectedSearchFilterType != UserSearchFilterTypeEnum.None)
                         {
-                            data = data.Where(u => u.Username != null && u.Username.Contains(filter, StringComparison.OrdinalIgnoreCase));
+                            if (this.IsRoleSearchFilterType)
+                            {
+                                data = data.Where(u => u.GetAllPlatformData().Any(p => p.Roles.Contains(this.SelectedUserRoleSearchFilter)));
+                            }
+                            else if (this.IsWatchTimeSearchFilterType && this.WatchTimeAmountSearchFilter > 0)
+                            {
+                                if (this.SelectedWatchTimeComparisonSearchFilter.Equals(GreaterThanAmountFilter))
+                                {
+                                    data = data.Where(u => u.OnlineViewingMinutes > this.WatchTimeAmountSearchFilter);
+                                }
+                                else if (this.SelectedWatchTimeComparisonSearchFilter.Equals(LessThanAmountFilter))
+                                {
+                                    data = data.Where(u => u.OnlineViewingMinutes < this.WatchTimeAmountSearchFilter);
+                                }
+                                else if (this.SelectedWatchTimeComparisonSearchFilter.Equals(EqualToAmountFilter))
+                                {
+                                    data = data.Where(u => u.OnlineViewingMinutes == this.WatchTimeAmountSearchFilter);
+                                }
+                            }
+                            else if (this.IsConsumablesSearchFilterType && this.SelectedConsumablesSearchFilter != null && this.ConsumablesAmountSearchFilter > 0)
+                            {
+                                if (this.SelectedConsumablesSearchFilter.Currency != null)
+                                {
+                                    if (this.SelectedConsumablesComparisonSearchFilter.Equals(GreaterThanAmountFilter))
+                                    {
+                                        data = data.Where(u => this.SelectedConsumablesSearchFilter.Currency.GetAmount(u) > this.ConsumablesAmountSearchFilter);
+                                    }
+                                    else if (this.SelectedConsumablesComparisonSearchFilter.Equals(LessThanAmountFilter))
+                                    {
+                                        data = data.Where(u => this.SelectedConsumablesSearchFilter.Currency.GetAmount(u) < this.ConsumablesAmountSearchFilter);
+                                    }
+                                    else if (this.SelectedConsumablesComparisonSearchFilter.Equals(EqualToAmountFilter))
+                                    {
+                                        data = data.Where(u => this.SelectedConsumablesSearchFilter.Currency.GetAmount(u) == this.ConsumablesAmountSearchFilter);
+                                    }
+                                }
+                                else if (this.SelectedConsumablesSearchFilter.Inventory != null && this.SelectedConsumablesItemsSearchFilter != null)
+                                {
+                                    if (this.SelectedConsumablesComparisonSearchFilter.Equals(GreaterThanAmountFilter))
+                                    {
+                                        data = data.Where(u => this.SelectedConsumablesSearchFilter.Inventory.GetAmount(u, this.SelectedConsumablesItemsSearchFilter) > this.ConsumablesAmountSearchFilter);
+                                    }
+                                    else if (this.SelectedConsumablesComparisonSearchFilter.Equals(LessThanAmountFilter))
+                                    {
+                                        data = data.Where(u => this.SelectedConsumablesSearchFilter.Inventory.GetAmount(u, this.SelectedConsumablesItemsSearchFilter) < this.ConsumablesAmountSearchFilter);
+                                    }
+                                    else if (this.SelectedConsumablesComparisonSearchFilter.Equals(EqualToAmountFilter))
+                                    {
+                                        data = data.Where(u => this.SelectedConsumablesSearchFilter.Inventory.GetAmount(u, this.SelectedConsumablesItemsSearchFilter) == this.ConsumablesAmountSearchFilter);
+                                    }
+                                }
+                                else if (this.SelectedConsumablesSearchFilter.StreamPass != null)
+                                {
+                                    if (this.SelectedConsumablesComparisonSearchFilter.Equals(GreaterThanAmountFilter))
+                                    {
+                                        data = data.Where(u => this.SelectedConsumablesSearchFilter.StreamPass.GetAmount(u) > this.ConsumablesAmountSearchFilter);
+                                    }
+                                    else if (this.SelectedConsumablesComparisonSearchFilter.Equals(LessThanAmountFilter))
+                                    {
+                                        data = data.Where(u => this.SelectedConsumablesSearchFilter.StreamPass.GetAmount(u) < this.ConsumablesAmountSearchFilter);
+                                    }
+                                    else if (this.SelectedConsumablesComparisonSearchFilter.Equals(EqualToAmountFilter))
+                                    {
+                                        data = data.Where(u => this.SelectedConsumablesSearchFilter.StreamPass.GetAmount(u) == this.ConsumablesAmountSearchFilter);
+                                    }
+                                }
+                            }
+                            else if (this.IsCustomSettingsSearchFilterType)
+                            {
+                                data = data.Where(u => u.IsSpecialtyExcluded || u.CustomTitle != null || u.CustomCommandIDs.Count > 0 || u.EntranceCommandID != Guid.Empty || !string.IsNullOrEmpty(u.Notes));
+                            }
+                            else if (this.IsLastSeenSearchFilterType && this.LastSeenAmountSearchFilter > 0)
+                            {
+                                DateTime lastSeenDate = DateTimeOffset.Now.Date.Subtract(TimeSpan.FromDays(this.LastSeenAmountSearchFilter));
+                                if (this.SelectedLastSeenComparisonSearchFilter.Equals(GreaterThanAmountFilter))
+                                {
+                                    data = data.Where(u => u.LastActivity.Date < lastSeenDate);
+                                }
+                                else if (this.SelectedLastSeenComparisonSearchFilter.Equals(LessThanAmountFilter))
+                                {
+                                    data = data.Where(u => u.LastActivity.Date > lastSeenDate);
+                                }
+                                else if (this.SelectedLastSeenComparisonSearchFilter.Equals(EqualToAmountFilter))
+                                {
+                                    data = data.Where(u => u.LastActivity.Date == lastSeenDate);
+
+                                }
+                            }
                         }
+
+                        //if (this.SortColumnIndex == 0) { data = this.IsDescendingSort ? data.OrderByDescending(u => u.Username) : data.OrderBy(u => u.Username); }
+                        //else if (this.SortColumnIndex == 1) { data = this.IsDescendingSort ? data.OrderByDescending(u => u.Platforms) : data.OrderBy(u => u.Platforms); }
+                        //else if (this.SortColumnIndex == 2) { data = this.IsDescendingSort ? data.OrderByDescending(u => u.PrimaryRole) : data.OrderBy(u => u.PrimaryRole); }
+                        //else if (this.SortColumnIndex == 3) { data = this.IsDescendingSort ? data.OrderByDescending(u => u.OnlineViewingMinutes) : data.OrderBy(u => u.OnlineViewingMinutes); }
+                        //else if (this.SortColumnIndex == 4) { data = this.IsDescendingSort ? data.OrderByDescending(u => u.PrimaryCurrency) : data.OrderBy(u => u.PrimaryCurrency); }
+                        //else if (this.SortColumnIndex == 5) { data = this.IsDescendingSort ? data.OrderByDescending(u => u.PrimaryRankPoints) : data.OrderBy(u => u.PrimaryRankPoints); }
                     }
 
-                    if (this.SelectedSearchFilterType != UserSearchFilterTypeEnum.None)
+                    List<UserV2ViewModel> users = new List<UserV2ViewModel>();
+                    foreach (UserV2Model u in data)
                     {
-                        if (this.IsRoleSearchFilterType)
-                        {
-                            data = data.Where(u => u.UserRoles.Contains(this.SelectedUserRoleSearchFilter));
-                        }
-                        else if (this.IsWatchTimeSearchFilterType && this.WatchTimeAmountSearchFilter > 0)
-                        {
-                            if (this.SelectedWatchTimeComparisonSearchFilter.Equals(GreaterThanAmountFilter))
-                            {
-                                data = data.Where(u => u.ViewingMinutes > this.WatchTimeAmountSearchFilter);
-                            }
-                            else if (this.SelectedWatchTimeComparisonSearchFilter.Equals(LessThanAmountFilter))
-                            {
-                                data = data.Where(u => u.ViewingMinutes < this.WatchTimeAmountSearchFilter);
-                            }
-                            else if (this.SelectedWatchTimeComparisonSearchFilter.Equals(EqualToAmountFilter))
-                            {
-                                data = data.Where(u => u.ViewingMinutes == this.WatchTimeAmountSearchFilter);
-                            }
-                        }
-                        else if (this.IsConsumablesSearchFilterType && this.SelectedConsumablesSearchFilter != null && this.ConsumablesAmountSearchFilter > 0)
-                        {
-                            if (this.SelectedConsumablesSearchFilter.Currency != null)
-                            {
-                                if (this.SelectedConsumablesComparisonSearchFilter.Equals(GreaterThanAmountFilter))
-                                {
-                                    data = data.Where(u => this.SelectedConsumablesSearchFilter.Currency.GetAmount(u) > this.ConsumablesAmountSearchFilter);
-                                }
-                                else if (this.SelectedConsumablesComparisonSearchFilter.Equals(LessThanAmountFilter))
-                                {
-                                    data = data.Where(u => this.SelectedConsumablesSearchFilter.Currency.GetAmount(u) < this.ConsumablesAmountSearchFilter);
-                                }
-                                else if (this.SelectedConsumablesComparisonSearchFilter.Equals(EqualToAmountFilter))
-                                {
-                                    data = data.Where(u => this.SelectedConsumablesSearchFilter.Currency.GetAmount(u) == this.ConsumablesAmountSearchFilter);
-                                }
-                            }
-                            else if (this.SelectedConsumablesSearchFilter.Inventory != null && this.SelectedConsumablesItemsSearchFilter != null)
-                            {
-                                if (this.SelectedConsumablesComparisonSearchFilter.Equals(GreaterThanAmountFilter))
-                                {
-                                    data = data.Where(u => this.SelectedConsumablesSearchFilter.Inventory.GetAmount(u, this.SelectedConsumablesItemsSearchFilter) > this.ConsumablesAmountSearchFilter);
-                                }
-                                else if (this.SelectedConsumablesComparisonSearchFilter.Equals(LessThanAmountFilter))
-                                {
-                                    data = data.Where(u => this.SelectedConsumablesSearchFilter.Inventory.GetAmount(u, this.SelectedConsumablesItemsSearchFilter) < this.ConsumablesAmountSearchFilter);
-                                }
-                                else if (this.SelectedConsumablesComparisonSearchFilter.Equals(EqualToAmountFilter))
-                                {
-                                    data = data.Where(u => this.SelectedConsumablesSearchFilter.Inventory.GetAmount(u, this.SelectedConsumablesItemsSearchFilter) == this.ConsumablesAmountSearchFilter);
-                                }
-                            }
-                            else if (this.SelectedConsumablesSearchFilter.StreamPass != null)
-                            {
-                                if (this.SelectedConsumablesComparisonSearchFilter.Equals(GreaterThanAmountFilter))
-                                {
-                                    data = data.Where(u => this.SelectedConsumablesSearchFilter.StreamPass.GetAmount(u) > this.ConsumablesAmountSearchFilter);
-                                }
-                                else if (this.SelectedConsumablesComparisonSearchFilter.Equals(LessThanAmountFilter))
-                                {
-                                    data = data.Where(u => this.SelectedConsumablesSearchFilter.StreamPass.GetAmount(u) < this.ConsumablesAmountSearchFilter);
-                                }
-                                else if (this.SelectedConsumablesComparisonSearchFilter.Equals(EqualToAmountFilter))
-                                {
-                                    data = data.Where(u => this.SelectedConsumablesSearchFilter.StreamPass.GetAmount(u) == this.ConsumablesAmountSearchFilter);
-                                }
-                            }
-                        }
-                        else if (this.IsCustomSettingsSearchFilterType)
-                        {
-                            data = data.Where(u => u.IsCurrencyRankExempt || u.CustomTitle != null || u.CustomCommandIDs.Count > 0 || u.EntranceCommandID != Guid.Empty || !string.IsNullOrEmpty(u.Notes));
-                        }
+                        users.Add(new UserV2ViewModel(u));
                     }
-
-                    if (this.SortColumnIndex == 0) { data = this.IsDescendingSort ? data.OrderByDescending(u => u.Username) : data.OrderBy(u => u.Username); }
-                    else if (this.SortColumnIndex == 1) { data = this.IsDescendingSort ? data.OrderByDescending(u => u.Platform) : data.OrderBy(u => u.Platform); }
-                    else if (this.SortColumnIndex == 2) { data = this.IsDescendingSort ? data.OrderByDescending(u => u.PrimaryRole) : data.OrderBy(u => u.PrimaryRole); }
-                    else if (this.SortColumnIndex == 3) { data = this.IsDescendingSort ? data.OrderByDescending(u => u.ViewingMinutes) : data.OrderBy(u => u.ViewingMinutes); }
-                    else if (this.SortColumnIndex == 4) { data = this.IsDescendingSort ? data.OrderByDescending(u => u.PrimaryCurrency) : data.OrderBy(u => u.PrimaryCurrency); }
-                    else if (this.SortColumnIndex == 5) { data = this.IsDescendingSort ? data.OrderByDescending(u => u.PrimaryRankPoints) : data.OrderBy(u => u.PrimaryRankPoints); }
-
-                    this.Users.ClearAndAddRange(data);
+                    this.Users.ClearAndAddRange(users);
                 }
                 catch (Exception ex) { Logger.Log(ex); }
 
@@ -428,14 +503,27 @@ namespace MixItUp.Base.ViewModel.MainControls
             });
         }
 
-        public async Task DeleteUser(UserDataModel user)
+        public async Task DeleteUser(UserV2Model user)
         {
             if (await DialogHelper.ShowConfirmation(Resources.DeleteUserDataPrompt))
             {
-                ChannelSession.Settings.UserData.Remove(user.ID);
-                await ChannelSession.Services.User.RemoveActiveUserByID(user.ID);
+                ServiceManager.Get<UserService>().DeleteUserData(user.ID);
             }
             this.RefreshUsers();
+        }
+
+        public async Task FindAndAddUser(StreamingPlatformTypeEnum platform, string username)
+        {
+            UserV2ViewModel user = await ServiceManager.Get<UserService>().CreateUser(platform, username);
+            if (user != null)
+            {
+                await DialogHelper.ShowMessage(string.Format(MixItUp.Base.Resources.UsersSuccessfullyFoundUser, user.DisplayName));
+                await this.RefreshUsersAsync();
+            }
+            else
+            {
+                await DialogHelper.ShowMessage(string.Format(MixItUp.Base.Resources.UsersUnableToFindUser, username));
+            }
         }
 
         protected override Task OnVisibleInternal()

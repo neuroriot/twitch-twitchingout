@@ -1,4 +1,6 @@
 ﻿using MixItUp.Base.Model.Actions;
+using MixItUp.Base.Services;
+using MixItUp.Base.Services.External;
 using MixItUp.Base.Util;
 using StreamingClient.Base.Util;
 using System.Collections.Generic;
@@ -24,6 +26,7 @@ namespace MixItUp.Base.ViewModel.Actions
                 this.NotifyPropertyChanged("OBSStudioNotEnabled");
                 this.NotifyPropertyChanged("XSplitNotEnabled");
                 this.NotifyPropertyChanged("StreamlabsOBSNotEnabled");
+                this.NotifyPropertyChanged("CanSpecifySceneName");
             }
         }
         private StreamingSoftwareTypeEnum selectedStreamingSoftwareType;
@@ -41,6 +44,7 @@ namespace MixItUp.Base.ViewModel.Actions
                 this.NotifyPropertyChanged("ShowSceneCollectionGrid");
                 this.NotifyPropertyChanged("ShowSceneGrid");
                 this.NotifyPropertyChanged("ShowSourceGrid");
+                this.NotifyPropertyChanged("CanSpecifySceneName");
                 this.NotifyPropertyChanged("ShowTextSourceGrid");
                 this.NotifyPropertyChanged("ShowWebBrowserSourceGrid");
                 this.NotifyPropertyChanged("ShowSourceDimensionsGrid");
@@ -49,11 +53,11 @@ namespace MixItUp.Base.ViewModel.Actions
         }
         private StreamingSoftwareActionTypeEnum selectedActionType;
 
-        public bool OBSStudioNotEnabled { get { return this.GetCurrentlySelectedStreamingSoftwareType() == StreamingSoftwareTypeEnum.OBSStudio && !ChannelSession.Services.OBSStudio.IsConnected; } }
+        public bool OBSStudioNotEnabled { get { return this.GetCurrentlySelectedStreamingSoftwareType() == StreamingSoftwareTypeEnum.OBSStudio && !ServiceManager.Get<IOBSStudioService>().IsConnected; } }
 
-        public bool XSplitNotEnabled { get { return this.GetCurrentlySelectedStreamingSoftwareType() == StreamingSoftwareTypeEnum.XSplit && !ChannelSession.Services.XSplit.IsConnected; } }
+        public bool XSplitNotEnabled { get { return this.GetCurrentlySelectedStreamingSoftwareType() == StreamingSoftwareTypeEnum.XSplit && !ServiceManager.Get<XSplitService>().IsConnected; } }
 
-        public bool StreamlabsOBSNotEnabled { get { return this.GetCurrentlySelectedStreamingSoftwareType() == StreamingSoftwareTypeEnum.StreamlabsOBS && !ChannelSession.Services.StreamlabsOBS.IsConnected; } }
+        public bool StreamlabsOBSNotEnabled { get { return this.GetCurrentlySelectedStreamingSoftwareType() == StreamingSoftwareTypeEnum.StreamlabsOBS && !ServiceManager.Get<StreamlabsOBSService>().IsConnected; } }
 
         public bool ShowNotSupported
         {
@@ -133,6 +137,20 @@ namespace MixItUp.Base.ViewModel.Actions
         private string sceneName;
 
         public bool ShowSourceGrid { get { return this.SelectedActionType == StreamingSoftwareActionTypeEnum.SourceVisibility || this.ShowTextSourceGrid || this.ShowWebBrowserSourceGrid || this.ShowSourceDimensionsGrid; } }
+
+        public bool CanSpecifySceneName
+        {
+            get
+            {
+                StreamingSoftwareTypeEnum streamingSoftware = this.GetCurrentlySelectedStreamingSoftwareType();
+                if (streamingSoftware == StreamingSoftwareTypeEnum.OBSStudio && this.ShowWebBrowserSourceGrid)
+                {
+                    this.SceneName = null;
+                    return false;
+                }
+                return true;
+            }
+        }
 
         public string SourceName
         {
@@ -322,7 +340,7 @@ namespace MixItUp.Base.ViewModel.Actions
 
         public StreamingSoftwareActionEditorControlViewModel() : base() { }
 
-        protected override async Task OnLoadedInternal()
+        protected override async Task OnOpenInternal()
         {
             this.SourceGetCurrentDimensionsCommand = this.CreateCommand(async () =>
             {
@@ -339,7 +357,7 @@ namespace MixItUp.Base.ViewModel.Actions
                     }
                 }
             });
-            await base.OnLoadedInternal();
+            await base.OnOpenInternal();
         }
 
         public override Task<Result> Validate()

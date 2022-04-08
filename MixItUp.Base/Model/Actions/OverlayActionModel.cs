@@ -25,14 +25,14 @@ namespace MixItUp.Base.Model.Actions
         public OverlayActionModel(string overlayName, OverlayItemModelBase overlayItem)
             : base(ActionTypeEnum.Overlay)
         {
-            var overlays = ChannelSession.Services.Overlay.GetOverlayNames();
+            var overlays = ServiceManager.Get<OverlayService>().GetOverlayNames();
             if (overlays.Contains(overlayName))
             {
                 this.OverlayName = overlayName;
             }
             else
             {
-                this.OverlayName = ChannelSession.Services.Overlay.DefaultOverlayName;
+                this.OverlayName = ServiceManager.Get<OverlayService>().DefaultOverlayName;
             }
 
             this.OverlayItem = overlayItem;
@@ -45,18 +45,8 @@ namespace MixItUp.Base.Model.Actions
             this.ShowWidget = showWidget;
         }
 
-#pragma warning disable CS0612 // Type or member is obsolete
-        internal OverlayActionModel(MixItUp.Base.Actions.OverlayAction action)
-            : base(ActionTypeEnum.Overlay)
-        {
-            this.OverlayName = action.OverlayName;
-            this.OverlayItem = action.OverlayItem;
-            this.WidgetID = action.WidgetID;
-            this.ShowWidget = action.ShowWidget;
-        }
-#pragma warning restore CS0612 // Type or member is obsolete
-
-        private OverlayActionModel() { }
+        [Obsolete]
+        public OverlayActionModel() { }
 
         protected override async Task PerformInternal(CommandParametersModel parameters)
         {
@@ -77,8 +67,8 @@ namespace MixItUp.Base.Model.Actions
             }
             else
             {
-                string overlayName = (string.IsNullOrEmpty(this.OverlayName)) ? ChannelSession.Services.Overlay.DefaultOverlayName : this.OverlayName;
-                IOverlayEndpointService overlay = ChannelSession.Services.Overlay.GetOverlay(overlayName);
+                string overlayName = (string.IsNullOrEmpty(this.OverlayName)) ? ServiceManager.Get<OverlayService>().DefaultOverlayName : this.OverlayName;
+                OverlayEndpointService overlay = ServiceManager.Get<OverlayService>().GetOverlay(overlayName);
                 if (overlay != null)
                 {
                     await overlay.ShowItem(this.OverlayItem, parameters);

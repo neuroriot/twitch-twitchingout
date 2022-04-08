@@ -1,10 +1,12 @@
 ﻿using MixItUp.Base.Model.Commands;
+using MixItUp.Base.Services;
 using MixItUp.Base.Util;
 using MixItUp.Base.ViewModel.Commands;
 using StreamingClient.Base.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Input;
 
 namespace MixItUp.Base.ViewModel.MainControls
@@ -98,8 +100,13 @@ namespace MixItUp.Base.ViewModel.MainControls
         }
         private bool selectAll;
 
+        public bool ShowPauseAllCommands { get { return !ServiceManager.Get<CommandService>().IsPaused; } }
+        public bool ShowUnpauseAllCommands { get { return ServiceManager.Get<CommandService>().IsPaused; } }
+
         public ICommand CancelSelectedCommand { get; set; }
         public ICommand ReplaySelectedCommand { get; set; }
+        public ICommand PauseAllCommandsCommand { get; set; }
+        public ICommand UnpauseAllCommandsCommand { get; set; }
 
         private bool filterApplied = false;
 
@@ -110,7 +117,7 @@ namespace MixItUp.Base.ViewModel.MainControls
             {
                 foreach (CommandInstanceViewModel commandInstance in this.GetSelectedCommandInstances())
                 {
-                    ChannelSession.Services.Command.Cancel(commandInstance.Model);
+                    ServiceManager.Get<CommandService>().Cancel(commandInstance.Model);
                     commandInstance.IsSelected = false;
                 }
                 this.ResetSelectedState();
@@ -120,15 +127,37 @@ namespace MixItUp.Base.ViewModel.MainControls
             {
                 foreach (CommandInstanceViewModel commandInstance in this.GetSelectedCommandInstances())
                 {
-                    await ChannelSession.Services.Command.Replay(commandInstance.Model);
+                    await ServiceManager.Get<CommandService>().Replay(commandInstance.Model);
                     commandInstance.IsSelected = false;
                 }
                 this.ResetSelectedState();
             });
 
-            ChannelSession.Services.Command.OnCommandInstanceAdded += Command_OnCommandInstanceAdded;
+            this.PauseAllCommandsCommand = this.CreateCommand(async () =>
+            {
+                await ServiceManager.Get<CommandService>().Pause();
+                this.NotifyPropertyChanged("ShowPauseAllCommands");
+                this.NotifyPropertyChanged("ShowUnpauseAllCommands");
+            });
+
+            this.UnpauseAllCommandsCommand = this.CreateCommand(async () =>
+            {
+                await ServiceManager.Get<CommandService>().Unpause();
+                this.NotifyPropertyChanged("ShowPauseAllCommands");
+                this.NotifyPropertyChanged("ShowUnpauseAllCommands");
+            });
+
+            ServiceManager.Get<CommandService>().OnCommandInstanceAdded += Command_OnCommandInstanceAdded;
 
             this.RefreshList();
+        }
+
+        protected override Task OnVisibleInternal()
+        {
+            this.NotifyPropertyChanged("ShowPauseAllCommands");
+            this.NotifyPropertyChanged("ShowUnpauseAllCommands");
+
+            return base.OnVisibleInternal();
         }
 
         public void SetSelectedStateForAll(bool state)
@@ -141,7 +170,7 @@ namespace MixItUp.Base.ViewModel.MainControls
 
         public void RefreshList()
         {
-            IEnumerable<CommandInstanceModel> commandInstances = ChannelSession.Services.Command.CommandInstances;
+            IEnumerable<CommandInstanceModel> commandInstances = ServiceManager.Get<CommandService>().CommandInstances;
 
             commandInstances = commandInstances.Where(c => c.ShowInUI);
 

@@ -1,4 +1,7 @@
 ﻿using MixItUp.Base.Model.Commands;
+using MixItUp.Base.Services;
+using StreamingClient.Base.Util;
+using System;
 using System.Runtime.Serialization;
 using System.Threading.Tasks;
 
@@ -24,22 +27,19 @@ namespace MixItUp.Base.Model.Actions
             this.OutputDevice = outputDevice;
         }
 
-#pragma warning disable CS0612 // Type or member is obsolete
-        internal SoundActionModel(MixItUp.Base.Actions.SoundAction action)
-            : base(ActionTypeEnum.Sound)
-        {
-            this.FilePath = action.FilePath;
-            this.VolumeScale = action.VolumeScale;
-            this.OutputDevice = action.OutputDevice;
-        }
-#pragma warning disable CS0612 // Type or member is obsolete
-
-        private SoundActionModel() { }
+        [Obsolete]
+        public SoundActionModel() { }
 
         protected override async Task PerformInternal(CommandParametersModel parameters)
         {
             string audioFilePath = await ReplaceStringWithSpecialModifiers(this.FilePath, parameters);
-            await ChannelSession.Services.AudioService.Play(audioFilePath, this.VolumeScale, this.OutputDevice);
+
+            if (!ServiceManager.Get<IFileService>().IsURLPath(audioFilePath) && !ServiceManager.Get<IFileService>().FileExists(audioFilePath))
+            {
+                Logger.Log(LogLevel.Error, $"Command: {parameters.InitialCommandID} - Sound Action - File does not exist: {audioFilePath}");
+            }
+
+            await ServiceManager.Get<IAudioService>().Play(audioFilePath, this.VolumeScale, this.OutputDevice);
         }
     }
 }

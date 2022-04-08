@@ -82,7 +82,7 @@ namespace MixItUp.Base.ViewModel.Currency
             }
         }
         private string name;
-        public IEnumerable<UserRoleEnum> Permissions { get; private set; } = UserDataModel.GetSelectableUserRoles();
+        public IEnumerable<UserRoleEnum> Permissions { get; private set; } = UserRoles.All;
         public UserRoleEnum Permission
         {
             get { return this.permission; }
@@ -281,7 +281,7 @@ namespace MixItUp.Base.ViewModel.Currency
             this.StreamPass = seasonPass;
 
             this.Name = this.StreamPass.Name;
-            this.Permission = this.StreamPass.Permission;
+            this.Permission = this.StreamPass.UserPermission;
             this.MaxLevel = this.StreamPass.MaxLevel;
             this.PointsForLevelUp = this.StreamPass.PointsForLevelUp;
             this.SubMultiplier = this.StreamPass.SubMultiplier;
@@ -464,7 +464,7 @@ namespace MixItUp.Base.ViewModel.Currency
 
             this.StreamPass.Name = this.Name;
             this.StreamPass.SpecialIdentifier = SpecialIdentifierStringBuilder.ConvertToSpecialIdentifier(this.Name, maxLength: 15);
-            this.StreamPass.Permission = this.Permission;
+            this.StreamPass.UserPermission = this.Permission;
             this.StreamPass.MaxLevel = this.MaxLevel;
             this.StreamPass.PointsForLevelUp = this.PointsForLevelUp;
             this.StreamPass.SubMultiplier = this.SubMultiplier;
@@ -496,31 +496,31 @@ namespace MixItUp.Base.ViewModel.Currency
             List<NewAutoChatCommandModel> commandsToAdd = new List<NewAutoChatCommandModel>();
             if (this.StreamPass != null)
             {
-                ChatCommandModel statusCommand = new ChatCommandModel("User " + this.StreamPass.Name, new HashSet<string>() { this.StreamPass.SpecialIdentifier });
+                ChatCommandModel statusCommand = new ChatCommandModel($"{MixItUp.Base.Resources.User} {this.StreamPass.Name}", new HashSet<string>() { this.StreamPass.SpecialIdentifier });
                 statusCommand.Requirements.AddBasicRequirements();
-                statusCommand.Requirements.Role.Role = UserRoleEnum.User;
+                statusCommand.Requirements.Role.UserRole = UserRoleEnum.User;
                 statusCommand.Requirements.Cooldown.Type = CooldownTypeEnum.Standard;
                 statusCommand.Requirements.Cooldown.IndividualAmount = 5;
-                statusCommand.Actions.Add(new ChatActionModel(string.Format("@$username is level ${0} with ${1} points!", this.StreamPass.UserLevelSpecialIdentifier, this.StreamPass.UserAmountSpecialIdentifier)));
-                commandsToAdd.Add(new NewAutoChatCommandModel(string.Format("!{0} - {1}", statusCommand.Triggers.First(), "Shows User's Amount"), statusCommand));
+                statusCommand.Actions.Add(new ChatActionModel(string.Format(MixItUp.Base.Resources.ConsumablesStreamPassCommandDefault, this.StreamPass.UserLevelSpecialIdentifier, this.StreamPass.UserAmountSpecialIdentifier)));
+                commandsToAdd.Add(new NewAutoChatCommandModel(string.Format("!{0} - {1}", statusCommand.Triggers.First(), MixItUp.Base.Resources.ShowsUsersAmount), statusCommand));
 
-                ChatCommandModel addCommand = new ChatCommandModel("Add " + this.StreamPass.Name, new HashSet<string>() { "add" + this.StreamPass.SpecialIdentifier });
+                ChatCommandModel addCommand = new ChatCommandModel($"{MixItUp.Base.Resources.Add} {this.StreamPass.Name}", new HashSet<string>() { MixItUp.Base.Resources.Add.ToLower() + this.StreamPass.SpecialIdentifier });
                 addCommand.Requirements.AddBasicRequirements();
-                addCommand.Requirements.Role.Role = UserRoleEnum.Mod;
+                addCommand.Requirements.Role.UserRole = UserRoleEnum.Moderator;
                 addCommand.Requirements.Cooldown.Type = CooldownTypeEnum.Standard;
                 addCommand.Requirements.Cooldown.IndividualAmount = 5;
                 addCommand.Actions.Add(new ConsumablesActionModel(this.StreamPass, ConsumablesActionTypeEnum.AddToSpecificUser, usersMustBePresent:true, "$arg2text", username: "$targetusername"));
-                addCommand.Actions.Add(new ChatActionModel(string.Format("@$targetusername received $arg2text points for {0}!", this.StreamPass.Name)));
-                commandsToAdd.Add(new NewAutoChatCommandModel(string.Format("!{0} - {1}", addCommand.Triggers.First(), "Adds Amount To Specified User"), addCommand));
+                addCommand.Actions.Add(new ChatActionModel(string.Format(MixItUp.Base.Resources.ConsumablesStreamPassAddCommandDefault, this.StreamPass.Name)));
+                commandsToAdd.Add(new NewAutoChatCommandModel(string.Format("!{0} - {1}", addCommand.Triggers.First(), MixItUp.Base.Resources.AddsAmountToSpecifiedUser), addCommand));
 
-                ChatCommandModel addAllCommand = new ChatCommandModel("Add All " + this.StreamPass.Name, new HashSet<string>() { "addall" + this.StreamPass.SpecialIdentifier });
+                ChatCommandModel addAllCommand = new ChatCommandModel($"{MixItUp.Base.Resources.AddAll} {this.StreamPass.Name}", new HashSet<string>() { MixItUp.Base.Resources.AddAll.ToLower() + this.StreamPass.SpecialIdentifier });
                 addAllCommand.Requirements.AddBasicRequirements();
-                addAllCommand.Requirements.Role.Role = UserRoleEnum.Mod;
+                addAllCommand.Requirements.Role.UserRole = UserRoleEnum.Moderator;
                 addAllCommand.Requirements.Cooldown.Type = CooldownTypeEnum.Standard;
                 addAllCommand.Requirements.Cooldown.IndividualAmount = 5;
                 addAllCommand.Actions.Add(new ConsumablesActionModel(this.StreamPass, ConsumablesActionTypeEnum.AddToAllChatUsers, usersMustBePresent: true, "$arg1text"));
-                addAllCommand.Actions.Add(new ChatActionModel(string.Format("Everyone got $arg1text points for {0}!", this.StreamPass.Name)));
-                commandsToAdd.Add(new NewAutoChatCommandModel(string.Format("!{0} - {1}", addAllCommand.Triggers.First(), "Adds Amount To All Chat Users"), addAllCommand));
+                addAllCommand.Actions.Add(new ChatActionModel(string.Format(MixItUp.Base.Resources.ConsumablesStreamPassAddAllCommandDefault, this.StreamPass.Name)));
+                commandsToAdd.Add(new NewAutoChatCommandModel(string.Format("!{0} - {1}", addAllCommand.Triggers.First(), MixItUp.Base.Resources.AddsAmountToAllChatUsers), addAllCommand));
             }
             return commandsToAdd;
         }

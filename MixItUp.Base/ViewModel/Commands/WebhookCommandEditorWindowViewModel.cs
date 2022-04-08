@@ -1,5 +1,6 @@
 ﻿using MixItUp.Base.Model.Commands;
 using MixItUp.Base.Model.Webhooks;
+using MixItUp.Base.Services;
 using MixItUp.Base.Util;
 using MixItUp.Base.ViewModels;
 using System;
@@ -59,13 +60,13 @@ namespace MixItUp.Base.ViewModel.Commands
             return JSONParameters.ToDictionary(j => j.SpecialIdentifierName, j => "Test Value");
         }
 
-        protected override async Task OnLoadedInternal()
+        protected override async Task OnOpenInternal()
         {
             this.AddJSONParameterCommand = this.CreateCommand(() =>
             {
                 this.JSONParameters.Add(new WebhookJSONParameterViewModel(this));
             });
-            await base.OnLoadedInternal();
+            await base.OnOpenInternal();
         }
 
         public override Task<Result> Validate()
@@ -114,8 +115,8 @@ namespace MixItUp.Base.ViewModel.Commands
                 webhookCommand.JSONParameters.Add(new WebhookJSONParameter { JSONParameterName = param.JSONParameterName, SpecialIdentifierName = param.SpecialIdentifierName });
             }
 
-            ChannelSession.Services.Command.WebhookCommands.Remove((WebhookCommandModel)this.existingCommand);
-            ChannelSession.Services.Command.WebhookCommands.Add(webhookCommand);
+            ServiceManager.Get<CommandService>().WebhookCommands.Remove((WebhookCommandModel)this.existingCommand);
+            ServiceManager.Get<CommandService>().WebhookCommands.Add(webhookCommand);
             return Task.FromResult(0);
         }
     }

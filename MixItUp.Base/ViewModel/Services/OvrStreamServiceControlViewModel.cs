@@ -1,4 +1,6 @@
-﻿using MixItUp.Base.Util;
+﻿using MixItUp.Base.Services;
+using MixItUp.Base.Services.External;
+using MixItUp.Base.Util;
 using System.Windows.Input;
 
 namespace MixItUp.Base.ViewModel.Services
@@ -21,6 +23,8 @@ namespace MixItUp.Base.ViewModel.Services
         public ICommand ConnectCommand { get; set; }
         public ICommand DisconnectCommand { get; set; }
 
+        public override string WikiPageName { get { return "ovrstream"; } }
+
         public OvrStreamServiceControlViewModel()
             : base(Resources.OvrStream)
         {
@@ -30,7 +34,7 @@ namespace MixItUp.Base.ViewModel.Services
             {
                 ChannelSession.Settings.OvrStreamServerIP = this.OvrStreamAddress;
 
-                Result result = await ChannelSession.Services.OvrStream.Connect();
+                Result result = await ServiceManager.Get<PolyPopService>().Connect();
                 if (result.Success)
                 {
                     this.IsConnected = true;
@@ -43,11 +47,11 @@ namespace MixItUp.Base.ViewModel.Services
 
             this.DisconnectCommand = this.CreateCommand(async () =>
             {
-                await ChannelSession.Services.OvrStream.Disconnect();
+                await ServiceManager.Get<PolyPopService>().Disconnect();
                 this.IsConnected = false;
             });
 
-            this.IsConnected = ChannelSession.Services.OvrStream.IsConnected;
+            this.IsConnected = ServiceManager.Get<PolyPopService>().IsConnected;
         }
     }
 }
