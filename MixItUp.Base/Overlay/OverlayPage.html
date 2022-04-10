@@ -474,8 +474,13 @@
 
                 var fileExtensionIndex = data.FilePath.lastIndexOf(".");
                 if (fileExtensionIndex > 0) {
-                    var fileExtension = data.FilePath.substring(fileExtensionIndex + 1);
+                    var fileExtension = data.FilePath.substring(fileExtensionIndex + 1).toLowerCase();
+                    if (fileExtension !== "mpeg" && fileExtension !== "mp3" && fileExtension !== "wav" && fileExtension !== "ogg") {
+                        fileExtension = "wav";
+                    }
                     sourceElement.type = "audio/" + fileExtension;
+                } else {
+                    sourceElement.type = "audio/wav";
                 }
                 addedElement.appendChild(sourceElement);
 
@@ -772,6 +777,7 @@
             }
 
             function textToSpeechPacket(data) {
+                responsiveVoice.forcedFallbackMode = true;
                 if (responsiveVoice.voiceSupport()) {
                     responsiveVoice.speak(data.Text, data.Voice, { pitch: data.Pitch, rate: data.Rate, volume: data.Volume });
                 }
