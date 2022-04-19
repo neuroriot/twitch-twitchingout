@@ -701,6 +701,11 @@ namespace MixItUp.Base.Model.Settings
 
             foreach (CounterModel counter in this.Counters.Values.ToList())
             {
+                // TODO: ToLower() all counters due to case-insensitive Special Identifier processing. Remove at some point in the future.
+                this.Counters.Remove(counter.Name);
+                counter.Name = counter.Name.ToLower();
+                this.Counters[counter.Name] = counter;
+
                 if (counter.ResetOnLoad)
                 {
                     await counter.ResetAmount();
@@ -853,6 +858,8 @@ namespace MixItUp.Base.Model.Settings
                     { "$PlatformUsername", u.PlatformUsername },
                     { "$Data", JSONSerializerHelper.SerializeToString(u) }
                 }));
+
+            await ServiceManager.Get<IDatabaseService>().CompressDb(this.DatabaseFilePath);
         }
 
         public async Task<IEnumerable<UserV2Model>> LoadUserV2Data(string query, Dictionary<string, object> parameters)

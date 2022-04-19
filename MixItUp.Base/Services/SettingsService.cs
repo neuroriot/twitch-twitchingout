@@ -189,6 +189,8 @@ namespace MixItUp.Base.Services
                         File.Delete(filePath);
                     }
 
+                    ServiceManager.Get<IDatabaseService>().ClearAllPools();
+
                     using (ZipArchive zipFile = ZipFile.Open(filePath, ZipArchiveMode.Create))
                     {
                         zipFile.CreateEntryFromFile(settings.SettingsFilePath, Path.GetFileName(settings.SettingsFilePath));
@@ -222,6 +224,8 @@ namespace MixItUp.Base.Services
 
                 string settingsFile = null;
                 string databaseFile = null;
+
+                ServiceManager.Get<IDatabaseService>().ClearAllPools();
 
                 try
                 {
@@ -341,16 +345,16 @@ namespace MixItUp.Base.Services
             }
             else if (currentVersion < SettingsV3Model.LatestVersion)
             {
-                await SettingsV3Upgrader.Version5Upgrade(currentVersion, filePath);
+                await SettingsV3Upgrader.Version4Upgrade(currentVersion, filePath);
             }
             SettingsV3Model settings = await FileSerializerHelper.DeserializeFromFile<SettingsV3Model>(filePath, ignoreErrors: true);
             settings.Version = SettingsV3Model.LatestVersion;
             return settings;
         }
 
-        public static async Task Version5Upgrade(int version, string filePath)
+        public static async Task Version4Upgrade(int version, string filePath)
         {
-            if (version < 5)
+            if (version < 4)
             {
                 string fileData = await ServiceManager.Get<IFileService>().ReadFile(filePath);
                 fileData = fileData.Replace("MixItUp.Base.Model.User.UserRoleEnum", "MixItUp.Base.Model.User.OldUserRoleEnum");
@@ -441,6 +445,10 @@ namespace MixItUp.Base.Services
                     if (user != null)
                     {
                         settings.Users[user.ID] = user;
+                    }
+                    else
+                    {
+                        settings.Users.Remove(oldUser.ID);
                     }
                 }
 
