@@ -7656,4 +7656,13 @@ via Twitch, it's a "your mileage may very" situation.</value>
   <data name="BackupGenerationFailed" xml:space="preserve">
     <value>Backup file failed to generate. If this continues, please visit the Mix It Up support Discord for further assistance.</value>
   </data>
+  <data name="Transparent" xml:space="preserve">
+    <value>Transparent</value>
+  </data>
+  <data name="MixItUpServices" xml:space="preserve">
+    <value>Mix It Up Services</value>
+  </data>
+  <data name="DisableAnimatedEmotes" xml:space="preserve">
+    <value>Disable Animated Emotes</value>
+  </data>
 </root>

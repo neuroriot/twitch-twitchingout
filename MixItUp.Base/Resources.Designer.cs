@@ -4344,6 +4344,15 @@ namespace MixItUp.Base {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Disable Animated Emotes.
+        /// </summary>
+        public static string DisableAnimatedEmotes {
+            get {
+                return ResourceManager.GetString("DisableAnimatedEmotes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Disable Chat.
         /// </summary>
         public static string DisableChat {
@@ -11181,6 +11190,15 @@ namespace MixItUp.Base {
         public static string MixItUpPopOut {
             get {
                 return ResourceManager.GetString("MixItUpPopOut", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Mix It Up Services.
+        /// </summary>
+        public static string MixItUpServices {
+            get {
+                return ResourceManager.GetString("MixItUpServices", resourceCulture);
             }
         }
         
@@ -18726,6 +18744,15 @@ namespace MixItUp.Base {
         public static string TranslationBy {
             get {
                 return ResourceManager.GetString("TranslationBy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Transparent.
+        /// </summary>
+        public static string Transparent {
+            get {
+                return ResourceManager.GetString("Transparent", resourceCulture);
             }
         }
         
