@@ -1078,6 +1078,15 @@ namespace MixItUp.Base {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Assign To Special Identifiers.
+        /// </summary>
+        public static string AssignToSpecialIdentifiers {
+            get {
+                return ResourceManager.GetString("AssignToSpecialIdentifiers", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Audio Output Device.
         /// </summary>
         public static string AudioOutputDevice {
@@ -1750,6 +1759,33 @@ namespace MixItUp.Base {
         public static string CaseSensitive {
             get {
                 return ResourceManager.GetString("CaseSensitive", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Category.
+        /// </summary>
+        public static string Category {
+            get {
+                return ResourceManager.GetString("Category", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Category: .
+        /// </summary>
+        public static string CategoryHeader {
+            get {
+                return ResourceManager.GetString("CategoryHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Category Updated: .
+        /// </summary>
+        public static string CategroryUpdatedHeader {
+            get {
+                return ResourceManager.GetString("CategroryUpdatedHeader", resourceCulture);
             }
         }
         
@@ -5136,6 +5172,15 @@ namespace MixItUp.Base {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to ERROR: Failed to update category.
+        /// </summary>
+        public static string ErrorFailedToUpdateCategory {
+            get {
+                return ResourceManager.GetString("ErrorFailedToUpdateCategory", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to ERROR: .
         /// </summary>
         public static string ErrorHeader {
@@ -5802,6 +5847,15 @@ namespace MixItUp.Base {
         public static string FailedToInitializeStreamerBasedServices {
             get {
                 return ResourceManager.GetString("FailedToInitializeStreamerBasedServices", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to update channel information.
+        /// </summary>
+        public static string FailedToUpdateChannelInformation {
+            get {
+                return ResourceManager.GetString("FailedToUpdateChannelInformation", resourceCulture);
             }
         }
         
@@ -9635,7 +9689,7 @@ namespace MixItUp.Base {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to You must specify either &quot;buy&quot; or &quot;sell&quot;.
+        ///   Looks up a localized string similar to You must specify either &quot;{0}&quot; or &quot;{1}&quot;.
         /// </summary>
         public static string InventoryMustSpecifyEitherBuyOrSell {
             get {
@@ -9698,7 +9752,7 @@ namespace MixItUp.Base {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to USAGE: {0} list = Lists all the items available for buying/selling ** {0} &lt;ITEM NAME&gt; = Lists the buying/selling price for the item ** {0} buy &lt;ITEM NAME&gt; [AMOUNT] = Buys 1 or the amount specified of the item ** {0} sell &lt;ITEM NAME&gt; [AMOUNT] = Sells 1 or the amount specified of the item.
+        ///   Looks up a localized string similar to USAGE: {0} {1} = Lists all the items available for buying/selling ** {0} &lt;ITEM NAME&gt; = Lists the buying/selling price for the item ** {0} {2} &lt;ITEM NAME&gt; [AMOUNT] = Buys 1 or the amount specified of the item ** {0} {3} &lt;ITEM NAME&gt; [AMOUNT] = Sells 1 or the amount specified of the item.
         /// </summary>
         public static string InventoryShopUsage {
             get {
@@ -11847,6 +11901,15 @@ namespace MixItUp.Base {
         public static string No {
             get {
                 return ResourceManager.GetString("No", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No Category found.
+        /// </summary>
+        public static string NoCategoryFound {
+            get {
+                return ResourceManager.GetString("NoCategoryFound", resourceCulture);
             }
         }
         
@@ -15449,6 +15512,15 @@ namespace MixItUp.Base {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Same Category.
+        /// </summary>
+        public static string SameCategory {
+            get {
+                return ResourceManager.GetString("SameCategory", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Same Game.
         /// </summary>
         public static string SameGame {
@@ -15769,15 +15841,6 @@ namespace MixItUp.Base {
         public static string SelectVoice {
             get {
                 return ResourceManager.GetString("SelectVoice", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Sell.
-        /// </summary>
-        public static string Sell {
-            get {
-                return ResourceManager.GetString("Sell", resourceCulture);
             }
         }
         
@@ -18964,6 +19027,24 @@ namespace MixItUp.Base {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Trovo Channel Stream Start.
+        /// </summary>
+        public static string TrovoChannelStreamStart {
+            get {
+                return ResourceManager.GetString("TrovoChannelStreamStart", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Trovo Channel Stream Stop.
+        /// </summary>
+        public static string TrovoChannelStreamStop {
+            get {
+                return ResourceManager.GetString("TrovoChannelStreamStop", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Trovo Channel Subscribed.
         /// </summary>
         public static string TrovoChannelSubscribed {
@@ -19708,6 +19789,15 @@ namespace MixItUp.Base {
         public static string TwitchFailedToGetUserData {
             get {
                 return ResourceManager.GetString("TwitchFailedToGetUserData", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to update custom Twitch tags.
+        /// </summary>
+        public static string TwitchFailedToUpdateCustomTags {
+            get {
+                return ResourceManager.GetString("TwitchFailedToUpdateCustomTags", resourceCulture);
             }
         }
         
