@@ -86,7 +86,8 @@ namespace MixItUp.Base.Services
         TrovoChannelSubscriptionGifted = 422,
         TrovoChannelMassSubscriptionsGifted = 423,
 
-        TrovoSpellCast = 470,
+        TrovoChannelSpellCast = 470,
+        TrovoChannelMagicChat = 471,
 
         // 500 = Glimesh
 
@@ -96,6 +97,10 @@ namespace MixItUp.Base.Services
         GlimeshChannelFollowed = 510,
 
         GlimeshChannelSubscribed = 520,
+        GlimeshChannelResubscribed = 521,
+        GlimeshChannelSubscriptionGifted = 522,
+
+        GlimeshChannelDonation = 550,
 
         // Donation Services = 1000
 
@@ -263,6 +268,7 @@ namespace MixItUp.Base.Services
                         break;
                     case EventTypeEnum.TwitchChannelSubscribed:
                     case EventTypeEnum.TrovoChannelSubscribed:
+                    case EventTypeEnum.GlimeshChannelSubscribed:
                         genericCommand = this.GetEventCommand(EventTypeEnum.ChannelSubscribed);
                         break;
                     case EventTypeEnum.TwitchChannelResubscribed:
@@ -271,6 +277,7 @@ namespace MixItUp.Base.Services
                         break;
                     case EventTypeEnum.TwitchChannelSubscriptionGifted:
                     case EventTypeEnum.TrovoChannelSubscriptionGifted:
+                    case EventTypeEnum.GlimeshChannelSubscriptionGifted:
                         genericCommand = this.GetEventCommand(EventTypeEnum.ChannelSubscriptionGifted);
                         break;
                     case EventTypeEnum.TwitchChannelMassSubscriptionsGifted:

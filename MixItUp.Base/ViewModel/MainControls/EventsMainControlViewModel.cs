@@ -178,7 +178,8 @@ namespace MixItUp.Base.ViewModel.MainControls
             trovoCommands.Commands.Add(new EventCommandItemViewModel(EventTypeEnum.TrovoChannelResubscribed));
             trovoCommands.Commands.Add(new EventCommandItemViewModel(EventTypeEnum.TrovoChannelSubscriptionGifted));
             trovoCommands.Commands.Add(new EventCommandItemViewModel(EventTypeEnum.TrovoChannelMassSubscriptionsGifted));
-            trovoCommands.Commands.Add(new EventCommandItemViewModel(EventTypeEnum.TrovoSpellCast));
+            trovoCommands.Commands.Add(new EventCommandItemViewModel(EventTypeEnum.TrovoChannelSpellCast));
+            trovoCommands.Commands.Add(new EventCommandItemViewModel(EventTypeEnum.TrovoChannelMagicChat));
             commandGroups.Add(trovoCommands);
 
             EventCommandGroupViewModel glimeshCommands = new EventCommandGroupViewModel(Resources.Glimesh, image: StreamingPlatforms.GlimeshLogoImageAssetFilePath);
@@ -186,6 +187,8 @@ namespace MixItUp.Base.ViewModel.MainControls
             glimeshCommands.Commands.Add(new EventCommandItemViewModel(EventTypeEnum.GlimeshChannelStreamStop));
             glimeshCommands.Commands.Add(new EventCommandItemViewModel(EventTypeEnum.GlimeshChannelFollowed));
             glimeshCommands.Commands.Add(new EventCommandItemViewModel(EventTypeEnum.GlimeshChannelSubscribed));
+            glimeshCommands.Commands.Add(new EventCommandItemViewModel(EventTypeEnum.GlimeshChannelSubscriptionGifted));
+            glimeshCommands.Commands.Add(new EventCommandItemViewModel(EventTypeEnum.GlimeshChannelDonation));
             commandGroups.Add(glimeshCommands);
 
             EventCommandGroupViewModel chatCommands = new EventCommandGroupViewModel(Resources.Chat, packIconName: "Chat");
