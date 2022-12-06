@@ -239,8 +239,8 @@ namespace MixItUp.Base.Util
                     case Model.Actions.StreamingSoftwareTypeEnum.XSplit:
                         ssService = ServiceManager.Get<XSplitService>();
                         break;
-                    case Model.Actions.StreamingSoftwareTypeEnum.StreamlabsOBS:
-                        ssService = ServiceManager.Get<StreamlabsOBSService>();
+                    case Model.Actions.StreamingSoftwareTypeEnum.StreamlabsDesktop:
+                        ssService = ServiceManager.Get<StreamlabsDesktopService>();
                         break;
                 }
 
@@ -401,9 +401,9 @@ namespace MixItUp.Base.Util
                 }
             }
 
-            if (ServiceManager.Get<TwitterService>().IsConnected && this.ContainsSpecialIdentifier("tweet"))
+            if (ServiceManager.Get<ITwitterService>().IsConnected && this.ContainsSpecialIdentifier("tweet"))
             {
-                IEnumerable<Tweet> tweets = await ServiceManager.Get<TwitterService>().GetLatestTweets();
+                IEnumerable<Tweet> tweets = await ServiceManager.Get<ITwitterService>().GetLatestTweets();
                 if (tweets != null && tweets.Count() > 0)
                 {
                     Tweet latestTweet = tweets.FirstOrDefault();
@@ -909,6 +909,7 @@ namespace MixItUp.Base.Util
                 this.ReplaceSpecialIdentifier(identifierHeader + UserSpecialIdentifierHeader + "issubscriber", user.IsPlatformSubscriber.ToString());
                 this.ReplaceSpecialIdentifier(identifierHeader + UserSpecialIdentifierHeader + "isvip", user.HasRole(UserRoleEnum.TwitchVIP).ToString());
                 this.ReplaceSpecialIdentifier(identifierHeader + UserSpecialIdentifierHeader + "ismod", user.MeetsRole(UserRoleEnum.Moderator).ToString());
+                this.ReplaceSpecialIdentifier(identifierHeader + UserSpecialIdentifierHeader + "isspecialtyexcluded", user.IsSpecialtyExcluded.ToString());
 
                 this.ReplaceSpecialIdentifier(identifierHeader + UserSpecialIdentifierHeader + "totalstreamswatched", user.TotalStreamsWatched.ToString());
                 this.ReplaceSpecialIdentifier(identifierHeader + UserSpecialIdentifierHeader + "totalamountdonated", user.TotalAmountDonated.ToCurrencyString());

@@ -151,13 +151,13 @@ namespace MixItUp.Base.ViewModel.MainControls
             genericCommands.Commands.Add(new EventCommandItemViewModel(EventTypeEnum.ChannelResubscribed));
             genericCommands.Commands.Add(new EventCommandItemViewModel(EventTypeEnum.ChannelSubscriptionGifted));
             genericCommands.Commands.Add(new EventCommandItemViewModel(EventTypeEnum.ChannelMassSubscriptionsGifted));
+            genericCommands.Commands.Add(new EventCommandItemViewModel(EventTypeEnum.GenericDonation));
             commandGroups.Add(genericCommands);
 
             EventCommandGroupViewModel twitchCommands = new EventCommandGroupViewModel(Resources.Twitch, image: StreamingPlatforms.TwitchLogoImageAssetFilePath);
             twitchCommands.Commands.Add(new EventCommandItemViewModel(EventTypeEnum.TwitchChannelStreamStart));
             twitchCommands.Commands.Add(new EventCommandItemViewModel(EventTypeEnum.TwitchChannelStreamStop));
             twitchCommands.Commands.Add(new EventCommandItemViewModel(EventTypeEnum.TwitchChannelFollowed));
-            twitchCommands.Commands.Add(new EventCommandItemViewModel(EventTypeEnum.TwitchChannelHosted));
             twitchCommands.Commands.Add(new EventCommandItemViewModel(EventTypeEnum.TwitchChannelRaided));
             twitchCommands.Commands.Add(new EventCommandItemViewModel(EventTypeEnum.TwitchChannelSubscribed));
             twitchCommands.Commands.Add(new EventCommandItemViewModel(EventTypeEnum.TwitchChannelResubscribed));
@@ -165,7 +165,9 @@ namespace MixItUp.Base.ViewModel.MainControls
             twitchCommands.Commands.Add(new EventCommandItemViewModel(EventTypeEnum.TwitchChannelMassSubscriptionsGifted));
             twitchCommands.Commands.Add(new EventCommandItemViewModel(EventTypeEnum.TwitchChannelBitsCheered));
             twitchCommands.Commands.Add(new EventCommandItemViewModel(EventTypeEnum.TwitchChannelPointsRedeemed));
+            twitchCommands.Commands.Add(new EventCommandItemViewModel(EventTypeEnum.TwitchChannelCharityDonation));
             twitchCommands.Commands.Add(new EventCommandItemViewModel(EventTypeEnum.TwitchChannelHypeTrainBegin));
+            twitchCommands.Commands.Add(new EventCommandItemViewModel(EventTypeEnum.TwitchChannelHypeTrainLevelUp));
             twitchCommands.Commands.Add(new EventCommandItemViewModel(EventTypeEnum.TwitchChannelHypeTrainEnd));
             commandGroups.Add(twitchCommands);
 
@@ -204,7 +206,6 @@ namespace MixItUp.Base.ViewModel.MainControls
             commandGroups.Add(chatCommands);
 
             EventCommandGroupViewModel donationCommands = new EventCommandGroupViewModel(Resources.Donations, packIconName: "Cash");
-            donationCommands.Commands.Add(new EventCommandItemViewModel(EventTypeEnum.GenericDonation));
             donationCommands.Commands.Add(new EventCommandItemViewModel(EventTypeEnum.StreamlabsDonation));
             donationCommands.Commands.Add(new EventCommandItemViewModel(EventTypeEnum.StreamElementsDonation));
             donationCommands.Commands.Add(new EventCommandItemViewModel(EventTypeEnum.StreamElementsMerchPurchase));

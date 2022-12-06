@@ -42,6 +42,7 @@ namespace MixItUp.Base.ViewModel.Actions
                 this.NotifyPropertyChanged("ShowSubActions");
                 this.NotifyPropertyChanged("ShowFollowersGrid");
                 this.NotifyPropertyChanged("ShowSlowChatGrid");
+                this.NotifyPropertyChanged("ShowSendAnnouncementGrid");
             }
         }
         private TwitchActionType selectedActionType;
@@ -63,7 +64,7 @@ namespace MixItUp.Base.ViewModel.Actions
         {
             get
             {
-                return this.SelectedActionType == TwitchActionType.Host || this.SelectedActionType == TwitchActionType.Raid ||
+                return this.SelectedActionType == TwitchActionType.Raid ||
                     this.SelectedActionType == TwitchActionType.VIPUser || this.SelectedActionType == TwitchActionType.UnVIPUser;
             }
         }
@@ -415,6 +416,7 @@ namespace MixItUp.Base.ViewModel.Actions
         public bool ShowFollowersGrid { get { return this.SelectedActionType == TwitchActionType.EnableFollowersOnly; } }
 
         public bool ShowSlowChatGrid { get { return this.SelectedActionType == TwitchActionType.EnableSlowChat; } }
+        public bool ShowSendAnnouncementGrid { get { return this.SelectedActionType == TwitchActionType.SendChatAnnouncement; } }
 
         public string TimeLength
         {
@@ -426,6 +428,30 @@ namespace MixItUp.Base.ViewModel.Actions
             }
         }
         private string timeLength;
+
+        public string Message
+        {
+            get { return this.message; }
+            set
+            {
+                this.message = value;
+                this.NotifyPropertyChanged();
+            }
+        }
+        private string message;
+
+        public IEnumerable<TwitchAnnouncementColor> AnnouncementColors { get { return EnumHelper.GetEnumList<TwitchAnnouncementColor>(); } }
+
+        public TwitchAnnouncementColor SelectedAnnouncementColor
+        {
+            get { return this.selectedAnnouncementColor; }
+            set
+            {
+                this.selectedAnnouncementColor = value;
+                this.NotifyPropertyChanged();
+            }
+        }
+        private TwitchAnnouncementColor selectedAnnouncementColor = TwitchAnnouncementColor.Primary;
 
         public TwitchActionEditorControlViewModel(TwitchActionModel action)
             : base(action, action.Actions)
@@ -518,6 +544,11 @@ namespace MixItUp.Base.ViewModel.Actions
             {
                 this.TimeLength = action.TimeLength;
             }
+            else if (this.ShowSendAnnouncementGrid)
+            {
+                this.Message = action.Message;
+                this.SelectedAnnouncementColor = action.Color;
+            }
         }
 
         public TwitchActionEditorControlViewModel() : base() { }
@@ -559,6 +590,11 @@ namespace MixItUp.Base.ViewModel.Actions
                     return new Result(MixItUp.Base.Resources.TwitchActionCreatePollMissingTitle);
                 }
 
+                if (this.PollTitle.Length > 60)
+                {
+                    return new Result(MixItUp.Base.Resources.TwitchActionPollTitleTooLong);
+                }
+
                 if (this.PollDurationSeconds <= 0)
                 {
                     return new Result(MixItUp.Base.Resources.TwitchActionCreatePollInvalidDuration);
@@ -567,6 +603,14 @@ namespace MixItUp.Base.ViewModel.Actions
                 if (string.IsNullOrEmpty(this.PollChoice1) || string.IsNullOrEmpty(this.PollChoice2))
                 {
                     return new Result(MixItUp.Base.Resources.TwitchActionCreatePollTwoOrMoreChoices);
+                }
+
+                if ((!string.IsNullOrEmpty(this.PollChoice1) && this.PollChoice1.Length > 25) ||
+                    (!string.IsNullOrEmpty(this.PollChoice2) && this.PollChoice2.Length > 25) ||
+                    (!string.IsNullOrEmpty(this.PollChoice3) && this.PollChoice3.Length > 25) ||
+                    (!string.IsNullOrEmpty(this.PollChoice4) && this.PollChoice4.Length > 25))
+                {
+                    return new Result(MixItUp.Base.Resources.TwitchActionPollChoicesTooLong);
                 }
             }
             else if (this.ShowPredictionGrid)
@@ -590,12 +634,24 @@ namespace MixItUp.Base.ViewModel.Actions
                 {
                     return new Result(MixItUp.Base.Resources.TwitchActionCreatePredictionTwoChoices);
                 }
+
+                if (this.PredictionOutcome1.Length > 25 || this.PredictionOutcome2.Length > 25)
+                {
+                    return new Result(MixItUp.Base.Resources.TwitchActionPredictionOutcomesTooLong);
+                }
             }
             else if (this.ShowFollowersGrid || this.ShowSlowChatGrid)
             {
                 if (string.IsNullOrEmpty(this.TimeLength))
                 {
                     return new Result(MixItUp.Base.Resources.TwitchActionTimeLengthMissing);
+                }
+            }
+            else if (this.ShowSendAnnouncementGrid)
+            {
+                if (string.IsNullOrEmpty(this.Message))
+                {
+                    return new Result(MixItUp.Base.Resources.TwitchActionMessageMissing);
                 }
             }
             return await base.Validate();
@@ -644,7 +700,7 @@ namespace MixItUp.Base.ViewModel.Actions
             }
             else if (this.ShowStreamMarkerGrid)
             {
-                return TwitchActionModel.CreateStreamMarkerAction(this.StreamMarkerDescription, this.ShowInfoInChat);
+                return TwitchActionModel.CreateStreamMarkerAction(this.StreamMarkerDescription);
             }
             else if (this.ShowUpdateChannelPointRewardGrid)
             {
@@ -671,6 +727,10 @@ namespace MixItUp.Base.ViewModel.Actions
             else if (this.ShowSlowChatGrid)
             {
                 return TwitchActionModel.CreateTimeAction(TwitchActionType.EnableSlowChat, this.TimeLength);
+            }
+            else if (this.ShowSendAnnouncementGrid)
+            {
+                return TwitchActionModel.CreateSendChatAnnouncementAction(this.Message, this.SelectedAnnouncementColor);
             }
             else
             {

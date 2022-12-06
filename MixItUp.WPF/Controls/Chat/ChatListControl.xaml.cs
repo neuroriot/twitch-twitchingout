@@ -16,6 +16,7 @@ using StreamingClient.Base.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -340,16 +341,37 @@ namespace MixItUp.WPF.Controls.Chat
             }
         }
 
-        private void MessageWhisperUserMenuItem_Click(object sender, RoutedEventArgs e)
+        private void ChatList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            MenuItem goToLinkMenuItem = LogicalTreeHelper.FindLogicalNode(this.ChatList.ContextMenu, "GoToLinkMenuItem") as MenuItem;
+
+            ChatMessageViewModel message = (e.AddedItems.Count == 0)
+                ? null
+                : e.AddedItems[0] as ChatMessageViewModel;
+
+            if (message != null && message.ContainsLink || ModerationService.LinkRegex.IsMatch(message.PlainTextMessage))
+            {
+                goToLinkMenuItem.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                goToLinkMenuItem.Visibility = Visibility.Collapsed;
+            }
+        }
+
+        private void GoToLinkMenuItem_Click(object sender, RoutedEventArgs e)
         {
             if (this.ChatList.SelectedItem != null && this.ChatList.SelectedItem is ChatMessageViewModel)
             {
                 ChatMessageViewModel message = (ChatMessageViewModel)this.ChatList.SelectedItem;
-                if (message.User != null)
+                if (message.ContainsLink || ModerationService.LinkRegex.IsMatch(message.PlainTextMessage))
                 {
-                    this.viewModel.SendMessageText = $"/w @{message.User.Username} ";
-                    this.ChatMessageTextBox.Focus();
-                    this.ChatMessageTextBox.CaretIndex = this.ChatMessageTextBox.Text.Length;
+                    // Get link and go!
+                    Match match = ModerationService.LinkRegex.Match(message.PlainTextMessage);
+                    if (match.Success && !string.IsNullOrWhiteSpace(match.Value))
+                    {
+                        ProcessHelper.LaunchLink(match.Value);
+                    }
                 }
             }
         }

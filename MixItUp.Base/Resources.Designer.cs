@@ -808,6 +808,15 @@ namespace MixItUp.Base {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} Donated {1} To The Twitch Charity.
+        /// </summary>
+        public static string AlertTwitchCharityDonation {
+            get {
+                return ResourceManager.GetString("AlertTwitchCharityDonation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to All.
         /// </summary>
         public static string All {
@@ -2303,6 +2312,15 @@ namespace MixItUp.Base {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Chinese (Traditional).
+        /// </summary>
+        public static string ChineseTraditional {
+            get {
+                return ResourceManager.GetString("ChineseTraditional", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Choice 1.
         /// </summary>
         public static string Choice1 {
@@ -2501,6 +2519,15 @@ namespace MixItUp.Base {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Color.
+        /// </summary>
+        public static string Color {
+            get {
+                return ResourceManager.GetString("Color", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Color Scheme.
         /// </summary>
         public static string ColorScheme {
@@ -2568,7 +2595,7 @@ namespace MixItUp.Base {
         ///built-in command locking system for this specific time it is run. This is to prevent what&apos;s known as a deadlock from occurring
         ///(command gets stuck and can&apos;t complete). This also means that other commands of the same type as the selected
         ///sub-command will be able to run at the same time if it&apos;s different than the current command. For example, if the selected
-        ///sub-command is an Action Group, then it wil [rest of string was truncated]&quot;;.
+        ///sub-command is an Action Group, then it [rest of string was truncated]&quot;;.
         /// </summary>
         public static string CommandActionWaitUntilCompleteHintText {
             get {
@@ -2643,7 +2670,7 @@ namespace MixItUp.Base {
         ///   Looks up a localized string similar to - Per Command Type: Each command type (Chat, Event, Timer, etc) has a lock that prevents other commands of the same type from running at the same time.
         ///- Per Action Type: Each action type (Chat, Sound, Conditional, etc) has a lock that prevents other commands also containing those actions from running at the same time.
         ///- Visual/Audio Actions: Commands containing visual/audio-based actions (Sound, Overlay, etc) share 1 lock while other commands will run as soon as they are triggered.
-        ///- Singular: All commands [rest of string was truncated]&quot;;.
+        ///- Singular: All comma [rest of string was truncated]&quot;;.
         /// </summary>
         public static string CommandLockSystemTooltip {
             get {
@@ -2782,7 +2809,7 @@ namespace MixItUp.Base {
         ///
         ///- Explain what the intent of your command is so that users can understand how they use their own assets in your commands.
         ///
-        ///- Upload these assets somewhere online and either use links to them in the actions themselves or include a link in the descripti [rest of string was truncated]&quot;;.
+        ///- Upload these assets somewhere online and either use links to them in the actions themselves or include a link in the descr [rest of string was truncated]&quot;;.
         /// </summary>
         public static string CommunityCommandsExternalAssetActionsDetected {
             get {
@@ -2831,7 +2858,7 @@ namespace MixItUp.Base {
         ///
         ///- Combine your other referenced commands into this command so users only need this one to fully use your setup.
         ///
-        ///- Upload the other commands needed for this command to work as well and reference their names in the  [rest of string was truncated]&quot;;.
+        ///- Upload the other commands needed for this command to work as well and reference their names in  [rest of string was truncated]&quot;;.
         /// </summary>
         public static string CommunityCommandsOtherCommandReferencedDetected {
             get {
@@ -2884,7 +2911,7 @@ namespace MixItUp.Base {
         ///
         ///- The contents of these commands are appropriate for the general public and do not contain any sexually explicit material, hateful speech, or malicious processes.
         ///
-        ///Failure to meet the above could have your command removed and lead to blocking of the ability [rest of string was truncated]&quot;;.
+        ///Failure to meet the above could have your command removed and lead to blocking of the a [rest of string was truncated]&quot;;.
         /// </summary>
         public static string CommunityCommandsUploadAgreement {
             get {
@@ -3226,6 +3253,15 @@ namespace MixItUp.Base {
         public static string Copy {
             get {
                 return ResourceManager.GetString("Copy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Copy Message.
+        /// </summary>
+        public static string CopyMessage {
+            get {
+                return ResourceManager.GetString("CopyMessage", resourceCulture);
             }
         }
         
@@ -4055,6 +4091,15 @@ namespace MixItUp.Base {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Delete Message.
+        /// </summary>
+        public static string DeleteMessage {
+            get {
+                return ResourceManager.GetString("DeleteMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Are you sure you want to delete this profile?.
         /// </summary>
         public static string DeleteProfilePrompt {
@@ -4502,6 +4547,15 @@ namespace MixItUp.Base {
         public static string DisableSubscriberChat {
             get {
                 return ResourceManager.GetString("DisableSubscriberChat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Disable Subscriber Mode.
+        /// </summary>
+        public static string DisableSubscriberMode {
+            get {
+                return ResourceManager.GetString("DisableSubscriberMode", resourceCulture);
             }
         }
         
@@ -5028,11 +5082,20 @@ namespace MixItUp.Base {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Please enable Streamlabs OBS connection on the Services page!.
+        ///   Looks up a localized string similar to Please enable Streamlabs Desktop connection on the Services page!.
         /// </summary>
-        public static string EnableStreamlabsOBS {
+        public static string EnableStreamlabsDesktop {
             get {
-                return ResourceManager.GetString("EnableStreamlabsOBS", resourceCulture);
+                return ResourceManager.GetString("EnableStreamlabsDesktop", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enable Subscriber Mode.
+        /// </summary>
+        public static string EnableSubscriberMode {
+            get {
+                return ResourceManager.GetString("EnableSubscriberMode", resourceCulture);
             }
         }
         
@@ -5291,7 +5354,7 @@ namespace MixItUp.Base {
         /// <summary>
         ///   Looks up a localized string similar to By default, all user role requirements are hiearchy-based. This means that if a user has a role that is the requirement OR they have a role that is higher than the requirement, they will not be blocked by it. For example, if a role requirement is set to Subscriber, the user must either be a Subscriber or have a role that is higher on the list such as Mod or Channel Editor.
         ///
-        ///This setting will change all role requirements to be explicit and require that the user has that role in order to pass the check. For e [rest of string was truncated]&quot;;.
+        ///This setting will change all role requirements to be explicit and require that the user has that role in order to pass the check. For [rest of string was truncated]&quot;;.
         /// </summary>
         public static string ExplicitUserRoleRequirementsTooltip {
             get {
@@ -7597,7 +7660,7 @@ namespace MixItUp.Base {
         /// <summary>
         ///   Looks up a localized string similar to The Treasure Defense game allows a user to start a winner-takes-all bet amongst all entered users. By default, the user that starts the game specifies how much the bet is and all subsequent users must bet that amount to join, with all winners of the game splitting the total payout equally.
         ///
-        ///After the time limit is up, a user from the participants is selected to be King. All other users are either then selected to be Knights or Thieves. It is the job of the King to pick one participant in hopes that they are [rest of string was truncated]&quot;;.
+        ///After the time limit is up, a user from the participants is selected to be King. All other users are either then selected to be Knights or Thieves. It is the job of the King to pick one participant in hopes that they a [rest of string was truncated]&quot;;.
         /// </summary>
         public static string GameCommandTreasureDefenseDescription {
             get {
@@ -7977,7 +8040,7 @@ namespace MixItUp.Base {
         /// <summary>
         ///   Looks up a localized string similar to The Volcano game allows a user to deposit a specific amount of currency into a volcano with the chance for a personal payout and a payout for all users in chat. The volcano goes through 3 stages as more and more currency is deposited into it and a different set of Deposit &amp; Status commands are used depending on what stage the Volcano is at.
         ///
-        ///Once the volcano reaches stage 3, each subsequent deposit has a chance to trigger an eruption. When an eruption occurs, the user who triggered it gets a specialized pay [rest of string was truncated]&quot;;.
+        ///Once the volcano reaches stage 3, each subsequent deposit has a chance to trigger an eruption. When an eruption occurs, the user who triggered it gets a specialized p [rest of string was truncated]&quot;;.
         /// </summary>
         public static string GameCommandVolcanoDescription {
             get {
@@ -8850,6 +8913,15 @@ namespace MixItUp.Base {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Go to Link.
+        /// </summary>
+        public static string GoToLink {
+            get {
+                return ResourceManager.GetString("GoToLink", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &gt;.
         /// </summary>
         public static string GreaterThan {
@@ -9255,6 +9327,15 @@ namespace MixItUp.Base {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Hype Train Level Up - Reached Level {0}.
+        /// </summary>
+        public static string HypeTrainLevelUp {
+            get {
+                return ResourceManager.GetString("HypeTrainLevelUp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Hype Train Started.
         /// </summary>
         public static string HypeTrainStarted {
@@ -9359,6 +9440,15 @@ namespace MixItUp.Base {
         public static string ImageFilePath {
             get {
                 return ResourceManager.GetString("ImageFilePath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Image Source.
+        /// </summary>
+        public static string ImageSource {
+            get {
+                return ResourceManager.GetString("ImageSource", resourceCulture);
             }
         }
         
@@ -10850,7 +10940,7 @@ namespace MixItUp.Base {
         /// <summary>
         ///   Looks up a localized string similar to This option helps to ensure that only the regular Subscription Gifted OR Mass Subscription Gifted event commands are run depending on what the number is set to. This is designed to help reduce the spam of subscription gifted commands and provide a better experience for your stream. Note that this will cause the processing of Subscription Gifted &amp; Mass Subscription Gifted event commands to be slightly delayed, typically less than 10 seconds.
         ///
-        ///This setting also only applies to streaming platforms that support [rest of string was truncated]&quot;;.
+        ///This setting also only applies to streaming platforms that suppo [rest of string was truncated]&quot;;.
         /// </summary>
         public static string MassGiftedSubsFilterAmountTooltip {
             get {
@@ -10972,6 +11062,15 @@ namespace MixItUp.Base {
         public static string MediaPrevious {
             get {
                 return ResourceManager.GetString("MediaPrevious", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Media Source.
+        /// </summary>
+        public static string MediaSource {
+            get {
+                return ResourceManager.GetString("MediaSource", resourceCulture);
             }
         }
         
@@ -11305,6 +11404,15 @@ namespace MixItUp.Base {
         public static string MixPlay {
             get {
                 return ResourceManager.GetString("MixPlay", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Mock Connection.
+        /// </summary>
+        public static string MockConnection {
+            get {
+                return ResourceManager.GetString("MockConnection", resourceCulture);
             }
         }
         
@@ -11737,6 +11845,15 @@ namespace MixItUp.Base {
         public static string Mute {
             get {
                 return ResourceManager.GetString("Mute", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Mute On/Off.
+        /// </summary>
+        public static string MuteOnOff {
+            get {
+                return ResourceManager.GetString("MuteOnOff", resourceCulture);
             }
         }
         
@@ -12299,11 +12416,20 @@ namespace MixItUp.Base {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to OBS Studio 25.0 or higher is required and you must run the OBS WebSocket Installer..
+        ///   Looks up a localized string similar to OBS Studio connectivity can be enabled by heading to Tools -&gt; obs-websocket in OBS Studio and clicking on &quot;Enable WebSocket server&quot;. Make sure &quot;Enable Authentication&quot; is un-checked or you have set a password in both OBS Studio and Mix It Up..
         /// </summary>
         public static string OBSStudioInfo2 {
             get {
                 return ResourceManager.GetString("OBSStudioInfo2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use Old Connection.
+        /// </summary>
+        public static string OBSStudioOldProtocol {
+            get {
+                return ResourceManager.GetString("OBSStudioOldProtocol", resourceCulture);
             }
         }
         
@@ -12317,7 +12443,9 @@ namespace MixItUp.Base {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to connect to OBS Studio web socket.
+        ///   Looks up a localized string similar to Failed to connect to OBS Studio web socket. Please make sure OBS Studio is running, the obs-websocket is enabled under the Tools menu, and the connection and password match your settings in OBS Studio.
+        ///
+        ///See the Wiki page on OBS Studio for further troubleshooting steps by clicking the &quot;?&quot; button on the OBS Studio tab header in Mix It Up..
         /// </summary>
         public static string OBSWebSocketFailed {
             get {
@@ -13951,6 +14079,15 @@ namespace MixItUp.Base {
         public static string Previous {
             get {
                 return ResourceManager.GetString("Previous", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Primary.
+        /// </summary>
+        public static string Primary {
+            get {
+                return ResourceManager.GetString("Primary", resourceCulture);
             }
         }
         
@@ -15933,6 +16070,15 @@ namespace MixItUp.Base {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Send Chat Announcement.
+        /// </summary>
+        public static string SendChatAnnouncement {
+            get {
+                return ResourceManager.GetString("SendChatAnnouncement", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Send Message.
         /// </summary>
         public static string SendMessage {
@@ -17324,6 +17470,24 @@ namespace MixItUp.Base {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Streaming Software Action: Missing image source file path.
+        /// </summary>
+        public static string StreamingSoftwareActionMissingImageSourceFilePath {
+            get {
+                return ResourceManager.GetString("StreamingSoftwareActionMissingImageSourceFilePath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Streaming Software Action: Missing media source file path.
+        /// </summary>
+        public static string StreamingSoftwareActionMissingMediaSourceFilePath {
+            get {
+                return ResourceManager.GetString("StreamingSoftwareActionMissingMediaSourceFilePath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Streaming Software Action: Missing scene.
         /// </summary>
         public static string StreamingSoftwareActionMissingScene {
@@ -17365,15 +17529,6 @@ namespace MixItUp.Base {
         public static string StreamingSoftwareActionMissingWebBrowserSourceFilePath {
             get {
                 return ResourceManager.GetString("StreamingSoftwareActionMissingWebBrowserSourceFilePath", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Streaming Software (OBS, SLOBS).
-        /// </summary>
-        public static string StreamingSoftwareOBSSLOBS {
-            get {
-                return ResourceManager.GetString("StreamingSoftwareOBSSLOBS", resourceCulture);
             }
         }
         
@@ -17423,6 +17578,51 @@ namespace MixItUp.Base {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Streamlabs Desktop might be running as administrator and Mix It Up is not. Try running Mix It Up as an Administrator before connecting..
+        /// </summary>
+        public static string StreamlabsDesktopAdminMaybe {
+            get {
+                return ResourceManager.GetString("StreamlabsDesktopAdminMaybe", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Streamlabs Desktop connection test failed, please ensure that Streamlabs OBS is running..
+        /// </summary>
+        public static string StreamlabsDesktopConnectionFailed {
+            get {
+                return ResourceManager.GetString("StreamlabsDesktopConnectionFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Streamlabs Desktop connection test successful!.
+        /// </summary>
+        public static string StreamlabsDesktopConnectionSuccess {
+            get {
+                return ResourceManager.GetString("StreamlabsDesktopConnectionSuccess", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Streamlabs Desktop could not be reached.
+        /// </summary>
+        public static string StreamlabsDesktopFailed {
+            get {
+                return ResourceManager.GetString("StreamlabsDesktopFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The Streamlabs Desktop service allows you to directly interact with your instance of Streamlabs Desktop to perform changes to scenes and sources..
+        /// </summary>
+        public static string StreamlabsDesktopInfo1 {
+            get {
+                return ResourceManager.GetString("StreamlabsDesktopInfo1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Streamlabs Donation.
         /// </summary>
         public static string StreamlabsDonation {
@@ -17437,60 +17637,6 @@ namespace MixItUp.Base {
         public static string StreamlabsInfo1 {
             get {
                 return ResourceManager.GetString("StreamlabsInfo1", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Streamlabs OBS.
-        /// </summary>
-        public static string StreamlabsOBS {
-            get {
-                return ResourceManager.GetString("StreamlabsOBS", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Streamlabs OBS might be running as administrator and Mix It Up is not. Try running Mix It Up as an Administrator before connecting..
-        /// </summary>
-        public static string StreamlabsOBSAdminMaybe {
-            get {
-                return ResourceManager.GetString("StreamlabsOBSAdminMaybe", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Streamlabs OBS connection test failed, please ensure that Streamlabs OBS is running..
-        /// </summary>
-        public static string StreamlabsOBSConnectionFailed {
-            get {
-                return ResourceManager.GetString("StreamlabsOBSConnectionFailed", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Streamlabs OBS connection test successful!.
-        /// </summary>
-        public static string StreamlabsOBSConnectionSuccess {
-            get {
-                return ResourceManager.GetString("StreamlabsOBSConnectionSuccess", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Streamlabs OBS could not be reached.
-        /// </summary>
-        public static string StreamlabsOBSFailed {
-            get {
-                return ResourceManager.GetString("StreamlabsOBSFailed", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The Streamlabs OBS service allows you to directly interact with your instance of Streamlabs OBS to perform changes to scenes and sources..
-        /// </summary>
-        public static string StreamlabsOBSInfo1 {
-            get {
-                return ResourceManager.GetString("StreamlabsOBSInfo1", resourceCulture);
             }
         }
         
@@ -19485,11 +19631,47 @@ namespace MixItUp.Base {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Twitch Action: A valid message must be specified.
+        /// </summary>
+        public static string TwitchActionMessageMissing {
+            get {
+                return ResourceManager.GetString("TwitchActionMessageMissing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Twitch Action: A valid name must be specified.
         /// </summary>
         public static string TwitchActionNameMissing {
             get {
                 return ResourceManager.GetString("TwitchActionNameMissing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Poll choices must be 25 characters or less..
+        /// </summary>
+        public static string TwitchActionPollChoicesTooLong {
+            get {
+                return ResourceManager.GetString("TwitchActionPollChoicesTooLong", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Poll titles must be 60 characters or less..
+        /// </summary>
+        public static string TwitchActionPollTitleTooLong {
+            get {
+                return ResourceManager.GetString("TwitchActionPollTitleTooLong", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Prediction outcomes must be 25 characters or less..
+        /// </summary>
+        public static string TwitchActionPredictionOutcomesTooLong {
+            get {
+                return ResourceManager.GetString("TwitchActionPredictionOutcomesTooLong", resourceCulture);
             }
         }
         
@@ -19571,6 +19753,15 @@ namespace MixItUp.Base {
         public static string TwitchChannelBitsCheered {
             get {
                 return ResourceManager.GetString("TwitchChannelBitsCheered", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Twitch Channel Charity Donation.
+        /// </summary>
+        public static string TwitchChannelCharityDonation {
+            get {
+                return ResourceManager.GetString("TwitchChannelCharityDonation", resourceCulture);
             }
         }
         
@@ -20517,6 +20708,15 @@ namespace MixItUp.Base {
         public static string UserImportResults {
             get {
                 return ResourceManager.GetString("UserImportResults", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to User Info.
+        /// </summary>
+        public static string UserInfo {
+            get {
+                return ResourceManager.GetString("UserInfo", resourceCulture);
             }
         }
         
@@ -21641,11 +21841,20 @@ namespace MixItUp.Base {
         ///whispers to be used as a form of automated communication. There are severe restrictions placed on the
         ///amount of whispers that can be sent in a timeline that make it very impractical for use, as well as spam
         ///preventative measures if the user is not on your friends list on Twitch. So although you can send whispers
-        ///via Twitch, it&apos;s a &quot;your mileage may very&quot; situation..
+        ///via Twitch, it&apos;s a &quot;your mileage may vary&quot; situation..
         /// </summary>
         public static string WhisperTooltip {
             get {
                 return ResourceManager.GetString("WhisperTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to WhisperUser.
+        /// </summary>
+        public static string WhisperUser {
+            get {
+                return ResourceManager.GetString("WhisperUser", resourceCulture);
             }
         }
         
