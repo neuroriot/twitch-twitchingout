@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 using Twitch.Base.Models.NewAPI.Channels;
 using Twitch.Base.Models.NewAPI.Games;
 using Twitch.Base.Models.NewAPI.Streams;
-using Twitch.Base.Models.NewAPI.Tags;
 using Twitch.Base.Models.NewAPI.Users;
 
 namespace MixItUp.Base.Services.Twitch
@@ -109,11 +108,19 @@ namespace MixItUp.Base.Services.Twitch
             {
                 Result userResult = null;
 
-                Result<TwitchPlatformService> twitchResult = await TwitchPlatformService.Connect(settings.StreamingPlatformAuthentications[StreamingPlatformTypeEnum.Twitch].UserOAuthToken);
-                if (twitchResult.Success)
+                // If scopes don't match, re-auth the token
+                if (string.Equals(string.Join(",", TwitchPlatformService.StreamerScopes), settings.StreamingPlatformAuthentications[StreamingPlatformTypeEnum.Twitch].UserOAuthToken.ScopeList, StringComparison.OrdinalIgnoreCase))
                 {
-                    this.UserConnection = twitchResult.Value;
-                    userResult = twitchResult;
+                    Result<TwitchPlatformService> twitchResult = await TwitchPlatformService.Connect(settings.StreamingPlatformAuthentications[StreamingPlatformTypeEnum.Twitch].UserOAuthToken);
+                    if (twitchResult.Success)
+                    {
+                        this.UserConnection = twitchResult.Value;
+                        userResult = twitchResult;
+                    }
+                    else
+                    {
+                        userResult = await this.ConnectUser();
+                    }
                 }
                 else
                 {
@@ -130,7 +137,7 @@ namespace MixItUp.Base.Services.Twitch
 
                     if (settings.StreamingPlatformAuthentications[StreamingPlatformTypeEnum.Twitch].BotOAuthToken != null)
                     {
-                        twitchResult = await TwitchPlatformService.Connect(settings.StreamingPlatformAuthentications[StreamingPlatformTypeEnum.Twitch].BotOAuthToken);
+                        Result<TwitchPlatformService> twitchResult = await TwitchPlatformService.Connect(settings.StreamingPlatformAuthentications[StreamingPlatformTypeEnum.Twitch].BotOAuthToken);
                         if (twitchResult.Success)
                         {
                             this.BotConnection = twitchResult.Value;
@@ -142,7 +149,6 @@ namespace MixItUp.Base.Services.Twitch
                         }
                         else
                         {
-
                             return new Result(success: true, message: MixItUp.Base.Resources.TwitchFailedToConnectBotAccount);
                         }
                     }
