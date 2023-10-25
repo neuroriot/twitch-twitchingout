@@ -10285,4 +10285,22 @@ sendParentMessage({ Type: "Remove", ID: "{ID}" });</value>
   <data name="NoDuplicates" xml:space="preserve">
     <value>No Duplicates</value>
   </data>
+  <data name="CountLinesInFile" xml:space="preserve">
+    <value>Count Lines In File</value>
+  </data>
+  <data name="ChatUserFirstMessage" xml:space="preserve">
+    <value>Chat User First Message</value>
+  </data>
+  <data name="TwitchChannelUpdated" xml:space="preserve">
+    <value>Twitch Channel Updated</value>
+  </data>
+  <data name="Register" xml:space="preserve">
+    <value>Register</value>
+  </data>
+  <data name="MixItUpOnlineAlphaRegistrationInfo" xml:space="preserve">
+    <value>Mix It Up Online is a new cloud-hosted version of Mix It Up currently in development. Mix It Up Desktop users can pre-register now for the chance at Alpha testing access by clicking the Register button below.</value>
+  </data>
+  <data name="MixItUpOnline" xml:space="preserve">
+    <value>Mix It Up Online</value>
+  </data>
 </root>
