@@ -844,6 +844,15 @@ namespace MixItUp.Base {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} - First Time Chat.
+        /// </summary>
+        public static string AlertUserFirstMessage {
+            get {
+                return ResourceManager.GetString("AlertUserFirstMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} Super Chat - {1}.
         /// </summary>
         public static string AlertYouTubeSuperChat {
@@ -9057,7 +9066,7 @@ namespace MixItUp.Base {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The game queue is not currently enabled.
+        ///   Looks up a localized string similar to The queue is not currently enabled.
         /// </summary>
         public static string GameQueueNotEnabled {
             get {
@@ -9075,7 +9084,7 @@ namespace MixItUp.Base {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to You are #$queueposition in the queue to play..
+        ///   Looks up a localized string similar to You are #$queueposition in the queue..
         /// </summary>
         public static string GameQueueUserJoinedExample {
             get {
@@ -16182,7 +16191,7 @@ namespace MixItUp.Base {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to There are currently {0} waiting to play..
+        ///   Looks up a localized string similar to There are currently {0} in the queue..
         /// </summary>
         public static string QueueCurrentCount {
             get {
@@ -16218,7 +16227,7 @@ namespace MixItUp.Base {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The following users are next up to play: .
+        ///   Looks up a localized string similar to The following users are next up: .
         /// </summary>
         public static string QueueUserListHeader {
             get {
@@ -16227,7 +16236,7 @@ namespace MixItUp.Base {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to You are #{0} in the queue to play.
+        ///   Looks up a localized string similar to You are #{0} in the queue.
         /// </summary>
         public static string QueueYouAreInPosition {
             get {
@@ -16236,7 +16245,7 @@ namespace MixItUp.Base {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to You are not currently in the queue to play.
+        ///   Looks up a localized string similar to You are not currently in the queue.
         /// </summary>
         public static string QueueYouAreNotCurrentlyIn {
             get {
@@ -18887,6 +18896,15 @@ namespace MixItUp.Base {
         public static string ShowTwitchHypeTrain {
             get {
                 return ResourceManager.GetString("ShowTwitchHypeTrain", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Show User First Message.
+        /// </summary>
+        public static string ShowUserFirstMessage {
+            get {
+                return ResourceManager.GetString("ShowUserFirstMessage", resourceCulture);
             }
         }
         
@@ -23405,6 +23423,15 @@ namespace MixItUp.Base {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to User Only Chat.
+        /// </summary>
+        public static string UserOnlyChat {
+            get {
+                return ResourceManager.GetString("UserOnlyChat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to User-Only Chat Commands.
         /// </summary>
         public static string UserOnlyChatCommands {
@@ -24274,6 +24301,15 @@ namespace MixItUp.Base {
         public static string WebBrowserSource {
             get {
                 return ResourceManager.GetString("WebBrowserSource", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Webhook.
+        /// </summary>
+        public static string Webhook {
+            get {
+                return ResourceManager.GetString("Webhook", resourceCulture);
             }
         }
         
