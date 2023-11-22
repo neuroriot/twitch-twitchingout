@@ -9,7 +9,7 @@ namespace MixItUp.Base.ViewModel.MainControls
 {
     public class MusicPlayerMainControlViewModel : WindowControlViewModelBase
     {
-        public ObservableCollection<MusicPlayerSong> Songs { get { return ServiceManager.Get<IMusicPlayerService>().Songs; } }
+        public ThreadSafeObservableCollection<MusicPlayerSong> Songs { get { return ServiceManager.Get<IMusicPlayerService>().Songs; } }
 
         public bool MusicLoaded { get { return this.Songs != null && this.Songs.Count > 0; } }
 
@@ -46,7 +46,7 @@ namespace MixItUp.Base.ViewModel.MainControls
             }
         }
 
-        public ThreadSafeObservableCollection<string> AudioDevices { get; set; } = new ThreadSafeObservableCollection<string>();
+        public ObservableCollection<string> AudioDevices { get; set; } = new ObservableCollection<string>();
 
         public string SelectedAudioDevice
         {
