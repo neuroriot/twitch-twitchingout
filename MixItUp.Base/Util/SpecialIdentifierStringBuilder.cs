@@ -19,6 +19,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Web;
+using Twitch.Base.Models.NewAPI.Ads;
 using Twitch.Base.Models.NewAPI.Bits;
 using Twitch.Base.Models.NewAPI.Games;
 using Twitch.Base.Services.NewAPI;
@@ -712,6 +713,18 @@ namespace MixItUp.Base.Util
                     long subPoints = await ServiceManager.Get<TwitchSessionService>().UserConnection.GetSubscriberPoints(ServiceManager.Get<TwitchSessionService>().User);
                     this.ReplaceSpecialIdentifier(SpecialIdentifierStringBuilder.TwitchSpecialIdentifierHeader + "subpoints", subPoints.ToString());
                 }
+
+                if (ServiceManager.Get<TwitchSessionService>().AdSchedule != null && this.ContainsSpecialIdentifier(SpecialIdentifierStringBuilder.TwitchSpecialIdentifierHeader + "ad"))
+                {
+                    AdScheduleModel adSchedule = ServiceManager.Get<TwitchSessionService>().AdSchedule;
+                    DateTimeOffset nextAd = adSchedule.NextAdTimestamp();
+                    int nextAdMinutes = adSchedule.NextAdMinutesFromNow();
+                    
+                    this.ReplaceSpecialIdentifier(SpecialIdentifierStringBuilder.TwitchSpecialIdentifierHeader + "adsnoozecount", adSchedule.snooze_count.ToString());
+                    this.ReplaceSpecialIdentifier(SpecialIdentifierStringBuilder.TwitchSpecialIdentifierHeader + "adnextduration", adSchedule.duration.ToString());
+                    this.ReplaceSpecialIdentifier(SpecialIdentifierStringBuilder.TwitchSpecialIdentifierHeader + "adnextminutes", nextAdMinutes.ToString());
+                    this.ReplaceSpecialIdentifier(SpecialIdentifierStringBuilder.TwitchSpecialIdentifierHeader + "adnexttime", nextAd.ToFriendlyTimeString());
+                }
             }
 
             await this.HandleLatestSpecialIdentifier(SpecialIdentifierStringBuilder.LatestFollowerUserData);
@@ -848,8 +861,12 @@ namespace MixItUp.Base.Util
                                 userItems[item.Name] = quantity;
                             }
 
-                            string itemSpecialIdentifier = identifierHeader + inventory.UserAmountSpecialIdentifierHeader + item.SpecialIdentifier;
-                            this.ReplaceSpecialIdentifier(itemSpecialIdentifier, quantity.ToString());
+                            string itemHeaderSpecialIdentifier = identifierHeader + inventory.UserAmountSpecialIdentifierHeader;
+
+                            this.ReplaceSpecialIdentifier(itemHeaderSpecialIdentifier + item.MaxAmountSpecialIdentifier, item.MaxAmount.ToString());
+                            this.ReplaceSpecialIdentifier(itemHeaderSpecialIdentifier + item.ShopBuyPriceSpecialIdentifier, item.BuyAmount.ToString());
+                            this.ReplaceSpecialIdentifier(itemHeaderSpecialIdentifier + item.ShopSellPriceSpecialIdentifier, item.SellAmount.ToString());
+                            this.ReplaceSpecialIdentifier(itemHeaderSpecialIdentifier + item.SpecialIdentifier, quantity.ToString());
                         }
 
                         if (userItems.Count > 0)

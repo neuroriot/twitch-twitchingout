@@ -230,6 +230,8 @@ namespace MixItUp.Base.Model.Settings
         public int TwitchMassGiftedSubsFilterAmount { get; set; } = 1;
         [DataMember]
         public bool TwitchReplyToCommandChatMessages { get; set; }
+        [DataMember]
+        public int TwitchUpcomingAdCommandTriggerAmount { get; set; } = 5;
 
         [DataMember]
         public HashSet<ActionTypeEnum> ActionsToHide { get; set; } = new HashSet<ActionTypeEnum>();
@@ -268,6 +270,8 @@ namespace MixItUp.Base.Model.Settings
         public string AlertTwitchChannelPointsColor { get; set; }
         [DataMember]
         public string AlertTwitchHypeTrainColor { get; set; }
+        [DataMember]
+        public string AlertTwitchAdsColor { get; set; }
         [DataMember]
         public string AlertYouTubeSuperChatColor { get; set; }
         [DataMember]
@@ -786,11 +790,26 @@ namespace MixItUp.Base.Model.Settings
             }
 
             // Clear out unused Cooldown Groups and Command Groups
-            var allUsedCooldownGroupNames = this.Commands.Values.ToList().Select(c => c.Requirements?.Cooldown?.GroupName).Distinct();
-            var allUnusedCooldownGroupNames = this.CooldownGroupAmounts.ToList().Where(c => !allUsedCooldownGroupNames.Contains(c.Key, StringComparer.CurrentCulture));
-            foreach (var unused in allUnusedCooldownGroupNames)
+            var unusedCooldownGroupNames = this.CooldownGroupAmounts.Select(c => c.Key).ToList();
+            foreach (var command in this.Commands.Values.ToList())
             {
-                this.CooldownGroupAmounts.Remove(unused.Key);
+                if (!string.IsNullOrEmpty(command.Requirements?.Cooldown?.GroupName))
+                {
+                    unusedCooldownGroupNames.Remove(command.Requirements?.Cooldown?.GroupName);
+                }
+            }
+
+            foreach (var product in this.RedemptionStoreProducts)
+            {
+                if (!string.IsNullOrEmpty(product.Value.Requirements?.Cooldown?.GroupName))
+                {
+                    unusedCooldownGroupNames.Remove(product.Value.Requirements?.Cooldown?.GroupName);
+                }
+            }
+
+            foreach (var unused in unusedCooldownGroupNames)
+            {
+                this.CooldownGroupAmounts.Remove(unused);
             }
 
             var allUsedCommandGroupNames = this.Commands.Values.ToList().Select(c => c.GroupName).Distinct();
