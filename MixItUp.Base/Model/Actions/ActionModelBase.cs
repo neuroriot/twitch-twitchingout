@@ -58,6 +58,7 @@ namespace MixItUp.Base.Model.Actions
         MusicPlayer,
         LumiaStream,
         Random,
+        MtionStudio = 42,
     }
 
     [DataContract]

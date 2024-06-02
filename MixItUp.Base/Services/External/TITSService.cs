@@ -105,12 +105,19 @@ namespace MixItUp.Base.Services.External
     public class TITSService : OAuthExternalServiceBase
     {
         public const int DefaultPortNumber = 42069;
+        public const int MaxCacheDuration = 30;
 
         private const string websocketAddress = "ws://localhost:";
 
         public bool WebSocketConnected { get; private set; }
 
         private TITSWebSocket websocket = new TITSWebSocket();
+
+        private IEnumerable<TITSItem> allItemsCache;
+        private DateTimeOffset allItemsCacheExpiration = DateTimeOffset.MinValue;
+
+        private IEnumerable<TITSTrigger> allTriggersCache;
+        private DateTimeOffset allTriggersCacheExpiration = DateTimeOffset.MinValue;
 
         public TITSService() : base(string.Empty) { }
 
@@ -151,23 +158,40 @@ namespace MixItUp.Base.Services.External
 
         public async Task<IEnumerable<TITSItem>> GetAllItems()
         {
-            List<TITSItem> results = new List<TITSItem>();
-            TITSWebSocketResponsePacket response = await this.websocket.SendAndReceive(new TITSWebSocketRequestPacket("TITSItemListRequest"));
-            if (response != null && response.data != null && response.data.TryGetValue("items", out JToken items) && items is JArray)
+            try
             {
-                foreach (TITSItem item in ((JArray)items).ToTypedArray<TITSItem>())
+                if (this.allItemsCacheExpiration <= DateTimeOffset.Now || this.allItemsCache == null)
                 {
-                    if (item != null)
+                    TITSWebSocketResponsePacket response = await this.websocket.SendAndReceive(new TITSWebSocketRequestPacket("TITSItemListRequest"));
+                    if (response != null && response.data != null && response.data.TryGetValue("items", out JToken items) && items is JArray)
                     {
-                        results.Add(item);
+                        List<TITSItem> results = new List<TITSItem>();
+                        foreach (TITSItem item in ((JArray)items).ToTypedArray<TITSItem>())
+                        {
+                            if (item != null)
+                            {
+                                results.Add(item);
+                            }
+                        }
+                        this.allItemsCache = results;
+                        this.allItemsCacheExpiration = DateTimeOffset.Now.AddMinutes(MaxCacheDuration);
+                    }
+                    else
+                    {
+                        Logger.Log(LogLevel.Error, "TITS - No Response Packet Received - GetAllItems");
                     }
                 }
+
+                if (this.allItemsCache != null)
+                {
+                    return this.allItemsCache;
+                }
             }
-            else
+            catch (Exception ex)
             {
-                Logger.Log(LogLevel.Error, "TITS - No Response Packet Received - GetAllItems");
+                Logger.Log(ex);
             }
-            return results;
+            return new List<TITSItem>();
         }
 
         public async Task<bool> ThrowItem(string itemID, double delayTime, int amount)
@@ -177,37 +201,62 @@ namespace MixItUp.Base.Services.External
             data["delayTime"] = delayTime;
             data["amountOfThrows"] = amount;
 
-            TITSWebSocketResponsePacket response = await this.websocket.SendAndReceive(new TITSWebSocketRequestPacket("TITSThrowItemsRequest", data));
-            if (response != null && response.data != null && response.data.ContainsKey("numberOfThrownItems"))
+            try
             {
-                return true;
+                TITSWebSocketResponsePacket response = await this.websocket.SendAndReceive(new TITSWebSocketRequestPacket("TITSThrowItemsRequest", data));
+                if (response != null && response.data != null && response.data.ContainsKey("numberOfThrownItems"))
+                {
+                    return true;
+                }
+                else
+                {
+                    Logger.Log(LogLevel.Error, $"TITS - No Response Packet Received - ThrowItem - {itemID}");
+                }
             }
-            else
+            catch (Exception ex)
             {
-                Logger.Log(LogLevel.Error, $"TITS - No Response Packet Received - ThrowItem - {itemID}");
+                Logger.Log(ex);
             }
+
             return false;
         }
 
         public async Task<IEnumerable<TITSTrigger>> GetAllTriggers()
         {
-            List<TITSTrigger> results = new List<TITSTrigger>();
-            TITSWebSocketResponsePacket response = await this.websocket.SendAndReceive(new TITSWebSocketRequestPacket("TITSTriggerListRequest"));
-            if (response != null && response.data != null && response.data.TryGetValue("triggers", out JToken triggers) && triggers is JArray)
+            try
             {
-                foreach (TITSTrigger trigger in ((JArray)triggers).ToTypedArray<TITSTrigger>())
+                if (this.allTriggersCacheExpiration <= DateTimeOffset.Now || this.allTriggersCache == null)
                 {
-                    if (trigger != null)
+                    TITSWebSocketResponsePacket response = await this.websocket.SendAndReceive(new TITSWebSocketRequestPacket("TITSTriggerListRequest"));
+                    if (response != null && response.data != null && response.data.TryGetValue("triggers", out JToken triggers) && triggers is JArray)
                     {
-                        results.Add(trigger);
+                        List<TITSTrigger> results = new List<TITSTrigger>();
+                        foreach (TITSTrigger trigger in ((JArray)triggers).ToTypedArray<TITSTrigger>())
+                        {
+                            if (trigger != null)
+                            {
+                                results.Add(trigger);
+                            }
+                        }
+                        this.allTriggersCache = results;
+                        this.allTriggersCacheExpiration = DateTimeOffset.Now.AddMinutes(MaxCacheDuration);
+                    }
+                    else
+                    {
+                        Logger.Log(LogLevel.Error, $"TITS - No Response Packet Received - GetAllTriggers");
                     }
                 }
+
+                if (this.allTriggersCache != null)
+                {
+                    return this.allTriggersCache;
+                }
             }
-            else
+            catch (Exception ex)
             {
-                Logger.Log(LogLevel.Error, $"TITS - No Response Packet Received - GetAllTriggers");
+                Logger.Log(ex);
             }
-            return results;
+            return new List<TITSTrigger>();
         }
 
         public async Task<bool> ActivateTrigger(string triggerID)
@@ -215,16 +264,33 @@ namespace MixItUp.Base.Services.External
             JObject data = new JObject();
             data["triggerID"] = triggerID;
 
-            TITSWebSocketResponsePacket response = await this.websocket.SendAndReceive(new TITSWebSocketRequestPacket("TITSTriggerActivateRequest", data));
-            if (response != null && response.data != null && response.messageType.Equals("TITSTriggerActivateResponse"))
+            try
             {
-                return true;
+                TITSWebSocketResponsePacket response = await this.websocket.SendAndReceive(new TITSWebSocketRequestPacket("TITSTriggerActivateRequest", data));
+                if (response != null && response.data != null && response.messageType.Equals("TITSTriggerActivateResponse"))
+                {
+                    return true;
+                }
+                else
+                {
+                    Logger.Log(LogLevel.Error, $"TITS - No Response Packet Received - ActivateTrigger - {triggerID}");
+                }
             }
-            else
+            catch (Exception ex)
             {
-                Logger.Log(LogLevel.Error, $"TITS - No Response Packet Received - ActivateTrigger - {triggerID}");
+                Logger.Log(ex);
             }
+
             return false;
+        }
+
+        public void ClearCaches()
+        {
+            this.allItemsCache = null;
+            this.allItemsCacheExpiration = DateTimeOffset.MinValue;
+
+            this.allTriggersCache = null;
+            this.allTriggersCacheExpiration = DateTimeOffset.MinValue;
         }
 
         protected override Task<Result> InitializeInternal()

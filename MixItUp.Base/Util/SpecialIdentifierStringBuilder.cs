@@ -80,6 +80,7 @@ namespace MixItUp.Base.Util
 
         public const string DonorDriveSpecialIdentifierHeader = "donordrive";
         public const string TiltifySpecialIdentifierHeader = "tiltify";
+        public const string PulsoidSpecialIdentifierHeader = "pulsoid";
 
         public const string UnicodeRegexSpecialIdentifier = "unicode";
 
@@ -408,6 +409,14 @@ namespace MixItUp.Base.Util
                 }
             }
 
+            if (ServiceManager.Get<GiveawayService>().IsRunning)
+            {
+                foreach (var kvp in ServiceManager.Get<GiveawayService>().GetSpecialIdentifiers())
+                {
+                    this.ReplaceSpecialIdentifier(kvp.Key, kvp.Value);
+                }
+            }
+
             if (ServiceManager.Get<DonorDriveService>().IsConnected)
             {
                 if (this.ContainsSpecialIdentifier(DonorDriveSpecialIdentifierHeader + "user") ||
@@ -436,17 +445,31 @@ namespace MixItUp.Base.Util
                 }
             }
 
-            if (ServiceManager.Get<TiltifyService>().IsConnected && ChannelSession.Settings.TiltifyCampaign > 0)
+            if (ServiceManager.Get<TiltifyService>().IsConnected)
             {
                 if (this.ContainsSpecialIdentifier(TiltifySpecialIdentifierHeader))
                 {
-                    TiltifyCampaign campaign = await ServiceManager.Get<TiltifyService>().GetCampaign(ChannelSession.Settings.TiltifyCampaign);
+                    await ServiceManager.Get<TiltifyService>().RefreshCampaign();
+
+                    TiltifyCampaign campaign = ServiceManager.Get<TiltifyService>().Campaign;
                     if (campaign != null)
                     {
-                        this.ReplaceSpecialIdentifier(TiltifySpecialIdentifierHeader + "campaignurl", campaign.CampaignURL);
-                        this.ReplaceSpecialIdentifier(TiltifySpecialIdentifierHeader + "donationurl", campaign.DonateURL);
-                        this.ReplaceSpecialIdentifier(TiltifySpecialIdentifierHeader + "donationgoal", campaign.FundraiserGoalAmount.ToString());
+                        this.ReplaceSpecialIdentifier(TiltifySpecialIdentifierHeader + "campaignurl", campaign.url);
+                        this.ReplaceSpecialIdentifier(TiltifySpecialIdentifierHeader + "donationurl", campaign.donate_url);
+                        this.ReplaceSpecialIdentifier(TiltifySpecialIdentifierHeader + "donationgoal", campaign.Goal.ToString());
                         this.ReplaceSpecialIdentifier(TiltifySpecialIdentifierHeader + "donationamount", campaign.AmountRaised.ToString());
+                    }
+                }
+            }
+
+            if (ServiceManager.Get<PulsoidService>().IsConnected)
+            {
+                if (this.ContainsSpecialIdentifier(PulsoidSpecialIdentifierHeader))
+                {
+                    PulsoidHeartRate heartRate = ServiceManager.Get<PulsoidService>().LastHeartRate;
+                    if (heartRate != null)
+                    {
+                        this.ReplaceSpecialIdentifier(PulsoidSpecialIdentifierHeader + "heartrate", heartRate.HeartRate.ToString());
                     }
                 }
             }

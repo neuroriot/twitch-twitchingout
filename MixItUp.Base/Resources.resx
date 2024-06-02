@@ -10344,4 +10344,58 @@ sendParentMessage({ Type: "Remove", ID: "{ID}" });</value>
   <data name="TwitchUpcomingAdCommandTriggerAmount" xml:space="preserve">
     <value>Twitch Upcoming Ad Command Amount (Minutes)</value>
   </data>
+  <data name="DontSaveLastWindowPosition" xml:space="preserve">
+    <value>Don't Save Window Positioning</value>
+  </data>
+  <data name="Pulsoid" xml:space="preserve">
+    <value>Pulsoid</value>
+  </data>
+  <data name="PulsoidUnableToGetHeartRateData" xml:space="preserve">
+    <value>Unable to get Heart Rate data</value>
+  </data>
+  <data name="PulsoidInfo1" xml:space="preserve">
+    <value>Pulsoid service connectivity allows you to perform actions when your heart rate changes through the Pulsoid service. When you log in, an authentication webpage will open asking you to log in to Pulsoid and approve Mix It Up to access your information. A Pulsoid BRO plan is required for all external integrations.</value>
+  </data>
+  <data name="PulsoidHeartRateChanged" xml:space="preserve">
+    <value>Pulsoid Heart Rate Changed</value>
+  </data>
+  <data name="PulsoidInfo2" xml:space="preserve">
+    <value>The Command Trigger Delay and Heart Rate Range options allows you set how often the Pulsoid Heart Rate Changed event command can be triggered due to changes in your heart rate. For full details on how these work, please visit the Mix It Up Wiki page on the Pulsoid service.</value>
+  </data>
+  <data name="CommandTriggerDelay" xml:space="preserve">
+    <value>Command Trigger Delay</value>
+  </data>
+  <data name="HeartRateRanges" xml:space="preserve">
+    <value>Heart Rate Ranges</value>
+  </data>
+  <data name="PulsoidInfo3" xml:space="preserve">
+    <value>A special 20% discount is available for new Pulsoid BRO plan user that also helps support Mix It Up's continued development. Information can found by visiting the link below:</value>
+  </data>
+  <data name="PulsoidWebsite" xml:space="preserve">
+    <value>Pulsoid Website</value>
+  </data>
+  <data name="Refresh" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+  <data name="EnableMtionStudio" xml:space="preserve">
+    <value>Please enable mtion studio on the Services page!</value>
+  </data>
+  <data name="MtionStudio" xml:space="preserve">
+    <value>mtion studio</value>
+  </data>
+  <data name="MtionStudioActionMissingTrigger" xml:space="preserve">
+    <value>mtion studio Action: Missing Trigger</value>
+  </data>
+  <data name="MtionStudioFailedToGetClubhouseData" xml:space="preserve">
+    <value>Failed to get clubhouse data</value>
+  </data>
+  <data name="MtionStudioInfo" xml:space="preserve">
+    <value>mtion studio connectivity allows you to run API triggers within mtion studio to have a wide variety of effects within your mtion studio clubhouses. API triggers are supported in version 0.39.1 and higher, so ensure your installation of mtion studio is updated to the latest version before attempting to connect. To connect to mtion studio, ensure the app is running and you are loaded into an active clubhouse, then simply click on the Connect button.</value>
+  </data>
+  <data name="APITrigger" xml:space="preserve">
+    <value>API Trigger</value>
+  </data>
+  <data name="Clubhouse" xml:space="preserve">
+    <value>Clubhouse</value>
+  </data>
 </root>

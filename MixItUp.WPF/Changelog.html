@@ -5,6 +5,47 @@
     <body>
         <h1 style="color: #5e9ca0;">Changelog</h1>
 
+        <h2 style="color: #2e6c80;">v1.1.0.17:</h2>
+        <ul>
+            <li>Adding mtion studio service connectivity:</li>
+            <ul>
+                <li>mtion studio can be connected by visiting the Services page</li>
+                <li>mtion studio version 0.39.1 or higher is required for this integration</li>
+                <li>The mtion studio action allows you to run API Triggers within mtion studio and supply values for parameters to include when run</li>
+            </ul>
+        </ul>
+
+        <h2 style="color: #2e6c80;">v1.1.0.16:</h2>
+        <ul>
+            <li>Adding caching of data for VTube Studio and Twitch Integrated Throwing System to reduce the amount of requests made and improve performance &amp; reliability. Cached data will refresh every 30 minutes or can be manually refreshed by hitting the Refresh button from within the VTube Studio or Twitch Integrated Throwing System actions.</li>
+            <li>Migrating Tiltify to new v5 API support</li>
+            <li>Consumable Actions will now round DOWN to the nearest whole number for the amount used (EX: 0.9999 => 0, while 1.000001 => 1)</li>
+        </ul>
+
+        <h2 style="color: #2e6c80;">v1.1.0.15:</h2>
+        <ul>
+            <li>Adding Pulsoid service connectivity</li>
+            <ul>
+                <li>Pulsoid can be connected by visiting the Services page.</li>
+                <li>A special 20% discount is available for new Pulsoid BRO plan user that also helps support Mix It Up development: https://pulsoid.net/s/WAoxz</li>
+                <li>The Pulsoid Heart Rate Changed Event command allows you to perform actions as your heart rate changes based on your Pulsoid service settings.</li>
+                <li>Adding $pulsoidheartrate Global Special Identifier</li>
+            </ul>
+            <li>Fixing bug related to certain Crowd Control packs and effects not loading properly within the Crowd Control command editor</li>
+            <li>Adding support for all Giveaway Special Identifiers to be usable globally across all commands</li>
+            <li>Services are now listed in alphabetical order on the Services page</li>
+            <li>Various quality of life &amp; bug fixes</li>
+        </ul>
+
+        <h2 style="color: #2e6c80;">v1.1.0.14:</h2>
+        <ul>
+            <li>Adding YouTube section to Channel page</li>
+            <li>Fixing Unmod User and Unban User functionality for Moderation Action for YouTube</li>
+            <li>Adding count() function to Special Identifier action</li>
+            <li>Adding additional error handling to VTube Studio and Twitch Integrated Throwing System service connectivity</li>
+            <li>Various quality of life &amp; bug fixes</li>
+        </ul>
+
         <h2 style="color: #2e6c80;">v1.1.0.13:</h2>
         <ul>
             <li>Adding Twitch Channel Ad Upcoming, Twitch Channel Ad Started, and Twitch Channel Ad Ended event commnads.</li>

@@ -1060,6 +1060,15 @@ namespace MixItUp.Base {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to API Trigger.
+        /// </summary>
+        public static string APITrigger {
+            get {
+                return ResourceManager.GetString("APITrigger", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Apostrophe.
         /// </summary>
         public static string Apostrophe {
@@ -2789,6 +2798,15 @@ namespace MixItUp.Base {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Clubhouse.
+        /// </summary>
+        public static string Clubhouse {
+            get {
+                return ResourceManager.GetString("Clubhouse", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Coin Pusher.
         /// </summary>
         public static string CoinPusher {
@@ -3017,6 +3035,15 @@ namespace MixItUp.Base {
         public static string CommandsRun {
             get {
                 return ResourceManager.GetString("CommandsRun", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Command Trigger Delay.
+        /// </summary>
+        public static string CommandTriggerDelay {
+            get {
+                return ResourceManager.GetString("CommandTriggerDelay", resourceCulture);
             }
         }
         
@@ -5352,6 +5379,15 @@ namespace MixItUp.Base {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Don&apos;t Save Window Positioning.
+        /// </summary>
+        public static string DontSaveLastWindowPosition {
+            get {
+                return ResourceManager.GetString("DontSaveLastWindowPosition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Down Arrow.
         /// </summary>
         public static string DownArrow {
@@ -5618,6 +5654,15 @@ namespace MixItUp.Base {
         public static string EnableIFTTT {
             get {
                 return ResourceManager.GetString("EnableIFTTT", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please enable mtion studio on the Services page!.
+        /// </summary>
+        public static string EnableMtionStudio {
+            get {
+                return ResourceManager.GetString("EnableMtionStudio", resourceCulture);
             }
         }
         
@@ -9786,6 +9831,15 @@ namespace MixItUp.Base {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Heart Rate Ranges.
+        /// </summary>
+        public static string HeartRateRanges {
+            get {
+                return ResourceManager.GetString("HeartRateRanges", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Height (Pixels).
         /// </summary>
         public static string Height {
@@ -12880,6 +12934,42 @@ namespace MixItUp.Base {
         public static string MoveUp {
             get {
                 return ResourceManager.GetString("MoveUp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to mtion studio.
+        /// </summary>
+        public static string MtionStudio {
+            get {
+                return ResourceManager.GetString("MtionStudio", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to mtion studio Action: Missing Trigger.
+        /// </summary>
+        public static string MtionStudioActionMissingTrigger {
+            get {
+                return ResourceManager.GetString("MtionStudioActionMissingTrigger", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to get clubhouse data.
+        /// </summary>
+        public static string MtionStudioFailedToGetClubhouseData {
+            get {
+                return ResourceManager.GetString("MtionStudioFailedToGetClubhouseData", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to mtion studio connectivity allows you to run API triggers within mtion studio to have a wide variety of effects within your mtion studio clubhouses. API triggers are supported in version 0.39.1 and higher, so ensure your installation of mtion studio is updated to the latest version before attempting to connect. To connect to mtion studio, ensure the app is running and you are loaded into an active clubhouse, then simply click on the Connect button..
+        /// </summary>
+        public static string MtionStudioInfo {
+            get {
+                return ResourceManager.GetString("MtionStudioInfo", resourceCulture);
             }
         }
         
@@ -16146,6 +16236,69 @@ namespace MixItUp.Base {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Pulsoid.
+        /// </summary>
+        public static string Pulsoid {
+            get {
+                return ResourceManager.GetString("Pulsoid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Pulsoid Heart Rate Changed.
+        /// </summary>
+        public static string PulsoidHeartRateChanged {
+            get {
+                return ResourceManager.GetString("PulsoidHeartRateChanged", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Pulsoid service connectivity allows you to perform actions when your heart rate changes through the Pulsoid service. When you log in, an authentication webpage will open asking you to log in to Pulsoid and approve Mix It Up to access your information. A Pulsoid BRO plan is required for all external integrations..
+        /// </summary>
+        public static string PulsoidInfo1 {
+            get {
+                return ResourceManager.GetString("PulsoidInfo1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The Command Trigger Delay and Heart Rate Range options allows you set how often the Pulsoid Heart Rate Changed event command can be triggered due to changes in your heart rate. For full details on how these work, please visit the Mix It Up Wiki page on the Pulsoid service..
+        /// </summary>
+        public static string PulsoidInfo2 {
+            get {
+                return ResourceManager.GetString("PulsoidInfo2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A special 20% discount is available for new Pulsoid BRO plan user that also helps support Mix It Up&apos;s continued development. Information can found by visiting the link below:.
+        /// </summary>
+        public static string PulsoidInfo3 {
+            get {
+                return ResourceManager.GetString("PulsoidInfo3", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to get Heart Rate data.
+        /// </summary>
+        public static string PulsoidUnableToGetHeartRateData {
+            get {
+                return ResourceManager.GetString("PulsoidUnableToGetHeartRateData", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Pulsoid Website.
+        /// </summary>
+        public static string PulsoidWebsite {
+            get {
+                return ResourceManager.GetString("PulsoidWebsite", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Purchase Time.
         /// </summary>
         public static string PurchaseTime {
@@ -16730,6 +16883,15 @@ namespace MixItUp.Base {
         public static string RedemptionStoreProductsAvailableForPurchaseHeader {
             get {
                 return ResourceManager.GetString("RedemptionStoreProductsAvailableForPurchaseHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Refresh.
+        /// </summary>
+        public static string Refresh {
+            get {
+                return ResourceManager.GetString("Refresh", resourceCulture);
             }
         }
         

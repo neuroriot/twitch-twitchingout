@@ -532,6 +532,9 @@
     <Compile Include="Controls\Actions\ModerationActionEditorControl.xaml.cs">
       <DependentUpon>ModerationActionEditorControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\Actions\MtionStudioActionEditorControl.xaml.cs">
+      <DependentUpon>MtionStudioActionEditorControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\Actions\OverlayActionEditorControl.xaml.cs">
       <DependentUpon>OverlayActionEditorControl.xaml</DependentUpon>
     </Compile>
@@ -962,6 +965,9 @@
     <Compile Include="Controls\Services\LumiaStreamServiceControl.xaml.cs">
       <DependentUpon>LumiaStreamServiceControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\Services\MtionStudioServiceControl.xaml.cs">
+      <DependentUpon>MtionStudioServiceControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\Services\OvrStreamServiceControl.xaml.cs">
       <DependentUpon>OvrStreamServiceControl.xaml</DependentUpon>
     </Compile>
@@ -970,6 +976,9 @@
     </Compile>
     <Compile Include="Controls\Services\PixelChatServiceControl.xaml.cs">
       <DependentUpon>PixelChatServiceControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\Services\PulsoidServiceControl.xaml.cs">
+      <DependentUpon>PulsoidServiceControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="Controls\Services\SAMMIServiceControl.xaml.cs">
       <DependentUpon>SAMMIServiceControl.xaml</DependentUpon>
@@ -1025,9 +1034,6 @@
     </Compile>
     <Compile Include="Controls\Services\TreatStreamServiceControl.xaml.cs">
       <DependentUpon>TreatStreamServiceControl.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Controls\Services\TwitterServiceControl.xaml.cs">
-      <DependentUpon>TwitterServiceControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="Controls\Services\VoicemodServiceControl.xaml.cs">
       <DependentUpon>VoicemodServiceControl.xaml</DependentUpon>
@@ -1290,6 +1296,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Controls\Actions\ModerationActionEditorControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\Actions\MtionStudioActionEditorControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -1861,6 +1871,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Controls\Services\MtionStudioServiceControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Controls\Services\OvrStreamServiceControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -1870,6 +1884,10 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="Controls\Services\PixelChatServiceControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\Services\PulsoidServiceControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -1944,10 +1962,6 @@
     <Page Include="Controls\Services\TreatStreamServiceControl.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Controls\Services\TwitterServiceControl.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Controls\Services\VoicemodServiceControl.xaml">
       <SubType>Designer</SubType>

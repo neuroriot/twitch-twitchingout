@@ -115,6 +115,8 @@ namespace MixItUp.Base.Model.Settings
         [DataMember]
         public OAuthTokenModel LumiaStreamOAuthToken { get; set; }
         [DataMember]
+        public OAuthTokenModel PulsoidOAuthToken { get; set; }
+        [DataMember]
         public bool EnableVoicemodStudio { get; set; }
         [DataMember]
         public bool EnableCrowdControl { get; set; }
@@ -497,7 +499,9 @@ namespace MixItUp.Base.Model.Settings
         public bool EnableDeveloperAPIAdvancedMode { get; set; }
 
         [DataMember]
-        public int TiltifyCampaign { get; set; }
+        public string TiltifyCampaignV5 { get; set; }
+        [DataMember]
+        public bool TiltifyCampaignV5IsTeam { get; set; }
 
         [DataMember]
         public string DonorDriveCharityURL { get; set; }
@@ -535,6 +539,14 @@ namespace MixItUp.Base.Model.Settings
 
         [DataMember]
         public string SAMMIAPIPassword { get; set; }
+
+        [DataMember]
+        public int PulsoidCommandTriggerDelay { get; set; } = 3;
+        [DataMember]
+        public List<Tuple<int, int>> PulsoidCommandHeartRateRangeTriggers { get; set; } = new List<Tuple<int, int>>();
+
+        [DataMember]
+        public bool MtionStudioEnabled { get; set; }
 
         #endregion Services
 
@@ -888,6 +900,10 @@ namespace MixItUp.Base.Model.Settings
             if (ServiceManager.Get<TITSService>().IsConnected)
             {
                 this.TITSOAuthToken = ServiceManager.Get<TITSService>().GetOAuthTokenCopy();
+            }
+            if (ServiceManager.Get<PulsoidService>().IsConnected)
+            {
+                this.PulsoidOAuthToken = ServiceManager.Get<PulsoidService>().GetOAuthTokenCopy();
             }
         }
 
