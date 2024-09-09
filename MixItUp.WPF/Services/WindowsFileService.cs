@@ -133,16 +133,22 @@ namespace MixItUp.WPF.Services
                     string safeFilePath = filePath.ToFilePathString();
                     if (File.Exists(filePath))
                     {
-                        using (StreamReader reader = new StreamReader(File.OpenRead(filePath)))
+                        using (FileStream fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                         {
-                            return await reader.ReadToEndAsync();
+                            using (StreamReader reader = new StreamReader(fileStream))
+                            {
+                                return await reader.ReadToEndAsync();
+                            }
                         }
                     }
                     else if (File.Exists(safeFilePath))
                     {
-                        using (StreamReader reader = new StreamReader(File.OpenRead(safeFilePath)))
+                        using (FileStream fileStream = new FileStream(safeFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                         {
-                            return await reader.ReadToEndAsync();
+                            using (StreamReader reader = new StreamReader(fileStream))
+                            {
+                                return await reader.ReadToEndAsync();
+                            }
                         }
                     }
                     else if (webPathPrefixes.Any(p => filePath.StartsWith(p, StringComparison.InvariantCultureIgnoreCase)))
@@ -168,7 +174,7 @@ namespace MixItUp.WPF.Services
                     string safeFilePath = filePath.ToFilePathString();
                     if (File.Exists(filePath))
                     {
-                        using (FileStream reader = File.OpenRead(filePath))
+                        using (FileStream reader = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                         {
                             byte[] data = new byte[reader.Length];
                             await reader.ReadAsync(data, 0, data.Length);
@@ -177,7 +183,7 @@ namespace MixItUp.WPF.Services
                     }
                     else if (File.Exists(safeFilePath))
                     {
-                        using (FileStream reader = File.OpenRead(safeFilePath))
+                        using (FileStream reader = new FileStream(safeFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                         {
                             byte[] data = new byte[reader.Length];
                             await reader.ReadAsync(data, 0, data.Length);
